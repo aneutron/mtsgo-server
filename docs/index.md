@@ -16,7 +16,7 @@ La spécification se fait avec le langage RAML 1.0
 
 La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur PostgreSQL avec l'extension PostGIS pour les traitement relatifs aux positions et aux zones.
 
-## Fonctionnalités:
+## Fonctionnalités
 
 ### Première version: v0.1a
 
