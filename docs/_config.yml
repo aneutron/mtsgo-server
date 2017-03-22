@@ -1,1 +1,4 @@
 theme: jekyll-theme-leap-day
+title: MTSGO - Server block
+description: The server component of the MTSGO Game
+show_downloads: true
