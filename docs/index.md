@@ -6,9 +6,31 @@ MTSGO est un projet visant à créer une application similaire dans le concept �
 
 Le projet se fait dans le cadre d'un projet à Télécom Bretagne comme projet de développement S2.
 
+Le système devra notamment fonctionner avec une API REST-ish fournie par le serveur, que les autres parties devront utiliser pour ajouter et exploiter les données.
+
 Ceci est le repo du bloc serveur de l'application serveur MTSGO. Il regroupe la documentation, les spécifications techniques avec le code du projet. Le code source est sous la licence libre.
 
+## Réalisation technique
+
+La spécification se fait avec le langage RAML 1.0
+
+La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur PostgreSQL avec l'extension PostGIS pour les traitement relatifs aux positions et aux zones.
+
+## Fonctionnalités:
+
+### Première version: v0.1a
+
+L'objectif est d'assurer un fonctionnement minimal du jeu. l'API couvrira:
+_Les fonctionnalités précédées par un __[S]__ concernent la supervision du serveur_
+- __[S]__ L'ajout et la modification de questions dans le monde.
+- Retourner les questions environnantes pour les joueurs.
+- Confirmer ou pas la réponse d'un joueur à une question et créditer son score.
+- Fournir la carte du monde.
+- __[S]__ Fournir des statistiques sur le serveur et le monde.
+
 ## Installation
+
+_À terme, le projet devra fournir un script pour l'installation d'une instance du projet_
 
 (à venir)
 
