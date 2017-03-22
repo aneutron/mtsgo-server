@@ -12,7 +12,7 @@ Ceci est le repo du bloc serveur de l'application serveur MTSGO. Il regroupe la 
 
 ## Réalisation technique
 
-La spécification se fait avec le langage RAML 1.0
+La spécification se fait avec le langage RAML 1.0 ([Lien](./api) vers l'API Supervision, Lien vers l'API client.)
 
 La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur PostgreSQL avec l'extension PostGIS pour les traitement relatifs aux positions et aux zones.
 
