@@ -1,0 +1,166 @@
+#%RAML 1.0
+version: 1.0b
+title: MTSGO Client API
+baseUri: https://mtsgo.resel.fr/api
+mediaType: application/json
+###########################################
+#		 	Type Definitions			  #
+###########################################
+types:
+  Question:
+    properties:
+      id:
+        type: integer
+        description: Identifiant unique de la question
+      question:
+        type: string
+        description: Texte de la question
+      rep1:
+        type: string
+        description: Réponse 1
+      rep2:
+        type: string
+        description: Réponse 2
+      rep3:
+        type: string
+        description: Réponse 3
+      rep4:
+        type: string
+        description: Réponse 4
+      score:
+        type: integer
+        description: Score attribué si le joueur répond correctement.
+      difficulty:
+        type: integer
+        description: Difficulté de la question.
+      position:
+        type: integer []
+        description: Position de la question
+  Answer:
+    properties:
+      qid:
+        type: integer
+        description: Identifiant de la question à laquelle on veut répondre.
+      answ_number:
+        type: integer
+        description: Le numéro de la réponse choisie.
+  Map:
+    properties:
+      version:
+        type: integer
+        description: Version de la map
+      uri:
+        type: string
+        description: URI de de la dernière version de map
+  Credentials:
+    properties:
+      username:
+        type: string
+        description: Nom de l'utilisateur
+      passhash:
+        type: string
+        description: Mot de passe hashé en SHA-256
+  SignupCredentials:
+    properties:
+      username:
+        type: string
+        description: Nom d'utilisateur
+      passwd:
+        type: string
+        description: Hash SHA-256 du mot de passe.
+      email:
+        type: string
+        description: E-Mail de l'utilisateur
+  Account:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Identifiant unique du compte.
+      username:
+        type: string
+        description: Nom de l'utilisateur.
+      score:
+        type: integer
+        description: Score que le joueur a accumulé.
+  PositionJoueur:
+    type: object
+    properties:
+      x: integer
+      y: integer
+      z: integer
+
+/auth:
+  get:
+    description: Obtenir un jeton d'authentification
+    queryParameters:
+      creds:
+        type: Credentials
+        description: Identifiants de l'utilisateur
+    responses:
+      200:
+        description: Dans le cas ou le couple login/mot de passe est correct.
+        body:
+          application/text:
+            type: string
+            description: Le jeton d'authentification pour la session.
+      403:
+        description: Dans le cas ou le couple login/mot de passe est incorrect.
+  post:
+    description: Inscrire un compte
+    queryParameters:
+      creds:
+        type: SignupCredentials
+        description: Paramètres du compte qu'on veut créer
+    responses:
+      200:
+        description: Dans le cas où le compte a été créé correctement.
+      500:
+        description: Dans le cas où la création du compte a échoué.
+        body:
+          application/text:
+            description: Message d'erreur
+/map:
+  get:
+    description: Obtenir la dernière version de la map.
+    responses:
+      200:
+        body:
+          type: Map
+          description: Dernière version de la map accompagnée de son lien.
+/position:
+  post:
+    description: Mettre à jour la position du joueur.
+    queryParameters:
+      position:
+        type: PositionJoueur
+        description: Player position
+    responses:
+      200:
+          description: La mise à jour s'est faite correctement.
+      500:
+          description: Une erreur a eu lieu lors de la mise à jour.
+/questions:
+  get:
+    description: Obtenir les questions proches du joueur
+    responses:
+      200:
+        body:
+          type: Question []
+          description: Une liste des questions proches du joueurs.
+  /{question_id}:
+    get:
+      description: Obtenir les détails d'une question identifiée par __question_id__
+      responses:
+        200:
+          body:
+            type: Question
+            description: Détails de la question
+        404:
+          description: Question non trouvée.
+  post:
+    description: Tenter de répondre à une question
+    queryParameters:
+      answer:
+        type: Answer
+        description: Réponse à la question

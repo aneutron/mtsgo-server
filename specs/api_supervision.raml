@@ -1,0 +1,185 @@
+#%RAML 1.0
+version: 1.0b
+title: MTSGO Supervision API
+mediaType: application/json
+###########################################
+#		 	Type Definitions			  #
+###########################################
+types:
+  Question:
+    type: object
+    properties: 
+      id: integer
+      question: string
+      rep1: string
+      rep2: string
+      rep3: string
+      rep4: string
+      bonneRep: integer
+      position: integer[]
+      rayon: integer
+  Stats:
+    type: object
+    description: Objet englobant les différentes statistiques.
+    properties: 
+      nbrQ: 
+        type: integer
+        description: Nombre de questions.
+      nbrJ:
+        type: integer
+        description: Nombre de joueurs inscrits.
+      nbrJConnected:
+        type: integer
+        description: Nombre de joueurs actifs.
+  PositionJoueur:
+    type: object
+    properties: 
+      id: integer
+      x: integer
+      y: integer
+      z: integer
+  EtatServeur:
+    type: object
+    properties: 
+      cpu: integer
+      ram: integer
+      DISKTOTAL: integer
+      DISKUSED: integer
+
+#############################################
+#			API Definitions					#
+#############################################
+/auth:
+    description: Système d'authentification.
+    /{username}:
+        get:
+            queryParameters:
+                passwd_hash:
+                    description: Hash en __SHA256__ du mot de passe du compte.
+                    type: string
+            responses:
+                200:
+                    description: Dans le cas ou le couple login/mot de passe est correct.
+                    body:
+                        application/text:
+                            description: Le jeton d'authentification pour la session.
+                403:
+                    description: Dans le cas ou le couple login/mot de passe est incorrect.
+/stats:
+  description: Obtention des statistiques sur le serveur _(Joueurs, Questions, etc.)_
+  get:
+    description: Retourne les statistiques actuels.
+    queryParameters:
+        authToken:
+            description: Le jeton d'authentification.
+            type: string
+    responses:
+      200:
+        body:
+          application/json:
+            type: Stats
+
+/questions:
+    description: Obtention, insértion et modification des questions dans le monde du jeu.
+    get:
+        description: Retourne toutes les questions dans la base de données.
+        queryParameters:
+            authToken:
+                description: Le jeton d'authentification.
+                type: string
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: Question []
+    post:
+        description: Positionne une question sur le jeu. __L'ID doit être vide pour cette requête__
+        queryParameters:
+            authToken:
+                    description: Le jeton d'authentification.
+                    type: string
+            question:
+                displayName: Question
+                type: Question
+                description: La question à insérer.
+        responses:
+            200:
+                description: Code retourné si aucune erreur n'a survenue lors de l'ajout de la question.
+            500:
+                description: Code retourné si une erreur a été rencontrée lors de l'ajout de la question.
+    /{question_id}/:
+        get:
+            description: Retourne les détails d'une question si son ID existe
+            queryParameters:
+                authToken:
+                    description: Le jeton d'authentification.
+                    type: string
+            responses:
+                200:
+                    description: Dans le cas où l'ID existe, les données de la question.
+                    body:
+                        application/json:
+                            type: Question
+                404:
+                    description: Dans le cas ou l'ID n'est associé à aucune question, un code 404 est retourné.
+        post:
+            description: Met à jour une question spécifique.
+            queryParameters:
+                authToken:
+                    description: Le jeton d'authentification.
+                    type: string
+                question:
+                    description: La question avec ses données mises à jour.
+                    type: Question
+            responses:
+                200:
+                    description: Dans le cas où la mise à jour a été faite avec succès.
+                    body:
+                        application/json:
+                            type: Question
+                500:
+                    description: Dans le cas où il y a eu une erreur lors de l'opération.
+                    
+/carte:
+    description: Obtention de la dernière version de la carte.
+    get:
+        description: Lien vers le fichier de la carte.
+        queryParameters:
+            authToken:
+                description: Le jeton d'authentification.
+                type: string
+        responses:
+            200:
+                body:
+                    application/text:
+                        type: string
+                        description: Le lien vers la carte.
+                        
+/position:
+    description: __Uniquement disponible dans la version de développement pour faciliter les test__
+    get:
+        description: Liste la position de tout les joueurs
+        queryParameters:
+            authToken:
+                description: Le jeton d'authentification.
+                type: string
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: PositionJoueur []
+    /{id_joueur}:
+        get:
+            description: Obtention de la position d'un joueur spécifique
+            queryParameters:
+                authToken:
+                    description: Le jeton d'authentification.
+                    type: string
+            responses:
+                200:
+                    description: Si le joueur avec l'id __id_joueur__ a été trouvé.
+                    body:
+                        application/json:
+                            type: PositionJoueur
+                404:
+                    description: Si le joueur avec l'id __id_joueur__ n'a pas été trouvé.
