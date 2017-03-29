@@ -1,7 +1,7 @@
 #%RAML 1.0
 version: 1.0b
 title: MTSGO Client API
-baseUri: https://mtsgo.resel.fr/api
+baseUri: https://mtsgo.resel.fr/api/
 mediaType: application/json
 ###########################################
 #		 	Type Definitions			  #
@@ -91,6 +91,7 @@ types:
       z: integer
 
 /auth:
+  description: Interface pour inscription et authentification.
   get:
     description: Obtenir un jeton d'authentification
     queryParameters:
@@ -121,6 +122,7 @@ types:
           application/text:
             description: Message d'erreur
 /map:
+  description: Interface pour obtention de la dernière version de la map.
   get:
     description: Obtenir la dernière version de la map.
     responses:
@@ -129,6 +131,7 @@ types:
           type: Map
           description: Dernière version de la map accompagnée de son lien.
 /position:
+  description: Interface pour mettre à jour à la position du joueur.
   post:
     description: Mettre à jour la position du joueur.
     queryParameters:
@@ -141,6 +144,7 @@ types:
       500:
           description: Une erreur a eu lieu lors de la mise à jour.
 /questions:
+  description: Interface pour obtenir les questions environnantes et essayer d'y répondre.
   get:
     description: Obtenir les questions proches du joueur
     responses:

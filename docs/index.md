@@ -8,13 +8,13 @@ Le projet se fait dans le cadre d'un projet à Télécom Bretagne comme projet d
 
 Le système devra notamment fonctionner avec une API REST-ish fournie par le serveur, que les autres parties devront utiliser pour ajouter et exploiter les données.
 
-Ceci est le repo du bloc serveur de l'application serveur MTSGO. Il regroupe la documentation, les spécifications techniques avec le code du projet. Le code source est sous la licence libre.
+Ceci est le repo du bloc __backend__ de l'application serveur MTSGO. Il regroupe la documentation, les spécifications techniques avec le code du projet. Le code source est sous la licence libre.
 
 ## Réalisation technique
 
 La spécification se fait avec le langage RAML 1.0 ([Lien](./api) vers l'API Supervision, Lien vers l'API client.)
 
-La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur PostgreSQL avec l'extension PostGIS pour les traitement relatifs aux positions et aux zones.
+La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur MySQL.
 
 ## Fonctionnalités
 
