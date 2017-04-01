@@ -28,6 +28,13 @@ DEBUG = True
 ALLOWED_HOSTS = ["mtsgo.resel.fr", "localhost"]
 
 
+ALLOWED_ADMINS = [
+    'aboudhar',
+    'rgaret',
+    'fbeugin',
+]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api',
+    'superapi',
 ]
 
 MIDDLEWARE = [
@@ -99,11 +108,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'tokenapi.backends.TokenBackend',
+    'django.contrib.auth.backends.ModelBackend'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 
 TIME_ZONE = 'UTC'
 
