@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import pymysql
+
+# MySQLdb doesn't work on python 3, so this workaround fixes it.
+#pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -112,6 +116,26 @@ AUTHENTICATION_BACKENDS = [
     'tokenapi.backends.TokenBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
+
+# Logging to files
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'mtsgo-debug.log'),
+        },
+    },
+    'loggers': {
+        'mtsgo': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
