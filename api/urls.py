@@ -7,7 +7,7 @@ from tokenapi.views import token
 from tokenapi.views import token_new
 
 urlpatterns = [
-    url(r'^auth$', token_new, name="auth_token_new"),
+    url(r'^auth/$', token_new, name="auth_token_new"),
     url(r'^auth/verify/(?P<token>.{24})/(?P<user>\d+).json$', token, name='auth_token_verify'),
     url(r'^auth/new/', views.NewAccount.as_view(), name='auth_new_account'),
     url(r'^position/', token_required(views.UpdatePosition.as_view()), name='update_position'),

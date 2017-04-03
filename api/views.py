@@ -1,5 +1,6 @@
 from django.views import View
 from django.http import JsonResponse
+from django.http import QueryDict
 
 
 class NewAccount(View):
@@ -7,8 +8,14 @@ class NewAccount(View):
 
 
 class UpdatePosition(View):
-    pass
+    def post(self, request):
+        r=QueryDict(request.body)
 
+        x, y, z = r['x'], r['y'], r['z']
+
+        print(x,y,z)
+
+        return JsonResponse({})
 
 class Questions(View):
 
@@ -16,6 +23,7 @@ class Questions(View):
         return JsonResponse({
             'hey': 'hey you!',
         })
+    pass
 
 
 class PlayerInfo(View):
