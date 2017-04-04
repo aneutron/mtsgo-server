@@ -4,6 +4,7 @@ from mtsgo.helpers import handle_exception
 from mtsgo.tokenapi.views import token_new
 from api.models import *
 import math
+from django.core import serializers
 
 
 class AuthView(View):
@@ -83,7 +84,13 @@ class Questions(View):
         return JsonResponse("Hey fucker", status=200, safe=False)
 
 class PlayerInfo(View):
-    pass
+
+    """
+    Renvoie certaines stats du joueur qui en fait la demande
+    """
+    def get(self, req):
+        data = serializers.serialize('json', Player.objects.filter(account=req.user), fields=('nickname', 'score'))
+        return JsonResponse(data, status=200, safe=False)
 
 
 class PlayerHistory(View):
