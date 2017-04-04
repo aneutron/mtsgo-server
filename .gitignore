@@ -34,6 +34,9 @@ db.sqlite3
 debug.log
 mtsgo-debug.log
 
+.pyc
+.pyo
+
 # *.iml
 # modules.xml
 # .idea/misc.xml 
