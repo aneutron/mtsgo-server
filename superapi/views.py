@@ -21,7 +21,7 @@ class ServerState(View):
         stats["memPercent"] = memPercent
         stats["diskTotal"] = diskTotal
         stats["diskUsed"] = diskUsed
-        data = json.dump(stats)
+        data = json.dumps(stats)
         return JsonResponse(data, status=200, safe=False)
 
 
@@ -41,7 +41,7 @@ class Questions(View):
             data = serializers.serialize('json', Question.objects.all())
             return JsonResponse(data, status=200, safe=False)
 
-    def post(self, request):
+    def post(self, request, qid=None):
         pass
 
 
