@@ -13,7 +13,7 @@ before_install:
 
 install:
   - pip install -r requirements.txt --quiet
-  - pip install coverage==3.4.3 --quiet
+  - pip install coverage==3.4 --quiet
   - pip install codecov --quiet
 
 before_script:
