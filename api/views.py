@@ -1,7 +1,11 @@
+from django.core.exceptions import ValidationError
+from django.core import serializers
+from django.core.validators import EmailValidator
 from django.views import View
 from django.http import JsonResponse
+from django.contrib.auth.password_validation import validate_password
+from django.utils.translation import ugettext_lazy as _
 from mtsgo.tokenapi.views import token_new
-from django.core import serializers
 from mtsgo.geocalc import *
 from api.models import *
 import math, json, random, logging
@@ -25,27 +29,34 @@ class AuthNewView(View):
         """
         Crée un compte pour l'utilisateur, et en parallèle, crée une instance de Player liée avec le compte.
         """
+        # Vérifier que les données nécessaires aux requêtes sont là.
         req_data = request.json_data
         if 'creds' not in req_data:
-            return JsonResponse('Malformed JSON input', status=401, safe=False)
+            return JsonResponse(_('Malformed JSON input'), status=401, safe=False)
         req_data = req_data['creds']
         if ('email' not in req_data) or ('username' not in req_data) or ('password' not in req_data):
-            return JsonResponse('Missing parameters for registration', status=401, safe=False)
+            return JsonResponse(_('Missing parameters for registration'), status=401, safe=False)
+        # Vérifier que le non d'utilisateur n'existe pas.
+        user = User.objects.filter(username=req_data['username'])
+        if user.exists():
+            return JsonResponse(_("Username already in use."), status=401, safe=False)
+        # Vérifier que le mot de passe et l'email sont conforme à la politique de vérification.
+        # TODO: Tests for this validation block.
         try:
-            user = User.objects.get(username=req_data['username'])
-            if user:
-                return JsonResponse("Nom d'utilisateur déjà utilisé.", status=401, safe=False)
+            is_email = EmailValidator()
+            is_email(req_data['email'])
+            validate_password(req_data['password'])
+        except ValidationError as e :
+            return JsonResponse(e.messages[0], status=401, safe=False)
+        try:
             user = User.objects.create_user(username=req_data['username'], email=req_data['email'],
                                             password=req_data['password'])
-        except Exception as e:
-            handle_exception(e, request)
-        try:
             player = Player(account=user, nickname=user.username)
             player.save()
         except Exception as e:
             handle_exception(e, request)
-            return JsonResponse("Une erreure a eu lieu lors de l'inscription", status=500, safe=False)
-        return JsonResponse('Account creation successful.', status=200, safe=False)
+            return JsonResponse(_("An error internal error occurred during the operation."), status=500, safe=False)
+        return JsonResponse(_('Account creation successful.'), status=200, safe=False)
 
 
 class UpdatePosition(View):

@@ -1,9 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
-
-from mtsgo.decorators import decode_json
-
 from functools import wraps
 
 

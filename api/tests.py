@@ -1,4 +1,8 @@
+from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils.translation import ugettext_lazy as _
+from django.core.validators import EmailValidator
+from django.contrib.auth.password_validation import validate_password
 from api.models import *
 from tokenapi.tokens import token_generator
 import json
@@ -49,14 +53,14 @@ class RegisterTest(TestCase):
     def testNoCreds(self):
         r = self.client.post('/api/auth/new/', data={}, content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
-        self.assertEqual(r.json(), 'Malformed JSON input', "[API][Auth] Wrong error message.")
+        self.assertEqual(r.json(), _('Malformed JSON input'), "[API][Auth] Wrong error message.")
 
     def testMissingCredentials(self):
         r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
             'username': 'user1'
         }}), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
-        self.assertEqual(r.json(), 'Missing parameters for registration', "[API][Auth] Wrong error message.")
+        self.assertEqual(r.json(), _('Missing parameters for registration'), "[API][Auth] Wrong error message.")
 
     def testExistingUsername(self):
         r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
@@ -65,10 +69,43 @@ class RegisterTest(TestCase):
             'email': 'mycoolemail@hey.me'
         }}), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
-        self.assertEqual(r.json(), "Nom d'utilisateur déjà utilisé.", "[API][Auth] Wrong error message.")
+        self.assertEqual(r.json(), _("Username already in use."), "[API][Auth] Wrong error message.")
+
+    def testBadPassword(self):
+        # Password validators are run with this, in the same order, so we should get this error
+        # message. As one error will fail the whole block.
+        error_msg = None
+        try:
+            validate_password('n')
+        except ValidationError as e:
+            error_msg = e.messages[0]
+        #Now test the error_msg
+        r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
+            'username': 'user2ddkd',
+            'password': 'n',
+            'email': 'mycoolemail@heye.fr'
+        }}), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
+        self.assertEqual(r.json(), error_msg, "[API][Auth] Wrong error message.")
+
+    def testBadEmail(self):
+        error_msg = str(EmailValidator.message)
+        r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
+            'username': 'user2ddkd',
+            'password': 'dfkkdkdkdn',
+            'email': 'mycoolemail@heyr'
+        }}), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
+        self.assertEqual(r.json(), error_msg, "[API][Auth] Wrong error message.")
 
     def testCorrectRegistration(self):
-        pass
+        r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
+            'username': 'user2ddkd',
+            'password': 'nsshhhhh',
+            'email': 'mycoolemail@heye.fr'
+        }}), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[API][Auth] Wrong status code.")
+        self.assertEqual(r.json(), _('Account creation successful.'), "[API][Auth] Wrong success message.")
 
 
 class UpdatePositionTest(TestCase):
