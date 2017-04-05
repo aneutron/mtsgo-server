@@ -1,4 +1,5 @@
 # MTSGO Server
+![Build Status](https://api.travis-ci.com/aneutron/mtsgo-server.svg?token=wgWk1dajYyv8wpbcqiyk&branch=dev-alpha)
 
 ## Présentation
 

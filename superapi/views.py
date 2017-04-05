@@ -9,7 +9,7 @@ import json
 
 
 class ServerState(View):
-    def get(self, request) :
+    def get(self, request):
         cpuPercent = psutil.cpu_percent(interval=1, percpu=True)
         mem = psutil.virtual_memory()
         memPercent = mem.percent
@@ -25,10 +25,7 @@ class ServerState(View):
         return JsonResponse(data, status=200, safe=False)
 
 
-
-
 class Questions(View):
-
     def get(self, request, qid=None):
         if qid:
             try:

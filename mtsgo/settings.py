@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-import pymysql
+#import pymysql
 
 # MySQLdb doesn't work on python 3, so this workaround fixes it.
 #pymysql.install_as_MySQLdb()
@@ -116,6 +116,15 @@ AUTHENTICATION_BACKENDS = [
     'tokenapi.backends.TokenBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
+
+
+# Caching in memory
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 
 # Logging to files
 LOGGING = {

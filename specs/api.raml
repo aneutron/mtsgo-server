@@ -36,6 +36,11 @@ types:
       position:
         type: integer []
         description: Position de la question
+  QuestionList:
+    type: object
+    properties:
+      questions:
+        type: Question[]
   Answer:
     properties:
       qid:
@@ -59,7 +64,15 @@ types:
         description: Nom de l'utilisateur
       passhash:
         type: string
-        description: Mot de passe hashé en SHA-256
+        description: Mot de passe en clair.
+  Token:
+    properties:
+      user_id:
+        type: integer
+        description: ID de l'utilisateur en cours.
+      token:
+        type: string
+        description: Le jeton d'authentification.
   SignupCredentials:
     properties:
       username:
@@ -67,7 +80,7 @@ types:
         description: Nom d'utilisateur
       passwd:
         type: string
-        description: Hash SHA-256 du mot de passe.
+        description: Mot de passe en clair.
       email:
         type: string
         description: E-Mail de l'utilisateur
@@ -89,38 +102,73 @@ types:
       x: integer
       y: integer
       z: integer
+  HistoryEntry:
+    type: object
+    properties:
+      question:
+        type: string
+        description: Enoncé de la question.
+      score:
+        type: integer
+        description: Score apporté par cette question.
+      difficulty:
+        type: integer
+        description: Difficulté de la question.
+      topic:
+        type: string
+        description: Domaine de la question.
+  History:
+    type: object
+    properties:
+      history:
+        type: HistoryEntry[]
+  PlayerStats:
+    type: object
+    properties:
+      username:
+        type: string
+        description: Nom de l'utilisateur.
+      score:
+        type: integer
+        description: Score du joueur.
+      rang:
+        type: integer
+        description: Rand du joueur _(non implémenté pour le moment, retourne un -1)
 
 /auth:
-  description: Interface pour inscription et authentification.
-  get:
-    description: Obtenir un jeton d'authentification
-    queryParameters:
-      creds:
-        type: Credentials
-        description: Identifiants de l'utilisateur
-    responses:
-      200:
-        description: Dans le cas ou le couple login/mot de passe est correct.
-        body:
-          application/text:
-            type: string
-            description: Le jeton d'authentification pour la session.
-      403:
-        description: Dans le cas ou le couple login/mot de passe est incorrect.
-  post:
-    description: Inscrire un compte
-    queryParameters:
-      creds:
-        type: SignupCredentials
-        description: Paramètres du compte qu'on veut créer
-    responses:
-      200:
-        description: Dans le cas où le compte a été créé correctement.
-      500:
-        description: Dans le cas où la création du compte a échoué.
-        body:
-          application/text:
-            description: Message d'erreur
+  description: Interface pour l'inscription et l'authentification.
+  /:
+    description: Interface pour authentification.
+    post:
+      description: Obtenir un jeton d'authentification
+      queryParameters:
+        application/json:
+            type: Credentials
+            description: Identifiants de l'utilisateur
+      responses:
+        200:
+          description: Dans le cas ou le couple login/mot de passe est correct.
+          body:
+              type: Token
+              description: Le jeton d'authentification pour la session.
+        403:
+          description: Dans le cas ou le couple login/mot de passe est incorrect.
+  /new/:
+    description: Interface pour l'inscription
+    post:
+      description: Inscrire un compte
+      queryParameters:
+        creds:
+          type: SignupCredentials
+          description: Paramètres du compte qu'on veut créer
+      responses:
+        200:
+          description: Dans le cas où le compte a été créé correctement.
+        500:
+          description: Dans le cas où la création du compte a échoué.
+          body:
+            application/text:
+              description: Message d'erreur
 /map:
   description: Interface pour obtention de la dernière version de la map.
   get:
@@ -130,7 +178,7 @@ types:
         body:
           type: Map
           description: Dernière version de la map accompagnée de son lien.
-/position:
+/position/:
   description: Interface pour mettre à jour à la position du joueur.
   post:
     description: Mettre à jour la position du joueur.
@@ -146,15 +194,37 @@ types:
 /questions:
   description: Interface pour obtenir les questions environnantes et essayer d'y répondre.
   get:
-    description: Obtenir les questions proches du joueur
+    description: |
+      Obtenir les questions proches du joueur.
+      __Attention,__ Dans des requêtes GET, on parle exclusivement de paramètres GET.
+    queryParameters:
+      user_id:
+        type: integer
+        description: L'id utilisateur que vous avez obtenu.
+      token:
+        type: string
+        description: Le jeton d'authentification que vous avez obtenu.
     responses:
       200:
         body:
-          type: Question []
+          type: QuestionList
           description: Une liste des questions proches du joueurs.
-  /{question_id}:
+  post:
+    description: Tenter de répondre à une question
+    queryParameters:
+      answer:
+        type: Answer
+        description: Réponse à la question
+  /{question_id}/:
     get:
-      description: Obtenir les détails d'une question identifiée par __question_id__
+      description: Obtenir les détails d'une question identifiée par __question_id__. __Attention,__ Dans des requêtes GET, on parle exclusivement de paramètres GET.
+      queryParameters:
+        user_id:
+          type: integer
+          description: L'id utilisateur que vous avez obtenu.
+        token:
+          type: string
+          description: Le jeton d'authentification que vous avez obtenu.
       responses:
         200:
           body:
@@ -162,9 +232,38 @@ types:
             description: Détails de la question
         404:
           description: Question non trouvée.
-  post:
-    description: Tenter de répondre à une question
+/history/:
+  description: Obtenir l'historique des dernières questions répondues dans le jeu.
+  get:
+    description: |
+      Obtenir l'historique des dernières questions répondues dans le jeu.
+      _(Le nombre de dernières questions est configurable dans le serveur)_.
+      __Attention,__ Dans des requêtes GET, on parle exclusivement de paramètres GET.
     queryParameters:
-      answer:
-        type: Answer
-        description: Réponse à la question
+      user_id:
+        type: integer
+        description: L'id utilisateur que vous avez obtenu.
+      token:
+        type: string
+        description: Le jeton d'authentification que vous avez obtenu.
+    responses:
+      200:
+        body:
+          type: History
+/player/:
+  description: Obtenir les informations sur le joueur.
+  get:
+    description: |
+      Obtient les informations sur le joueur.
+      __Attention,__ Dans des requêtes GET, on parle exclusivement de paramètres GET.
+    queryParameters:
+        user_id:
+          type: integer
+          description: L'id utilisateur que vous avez obtenu.
+        token:
+          type: string
+          description: Le jeton d'authentification que vous avez obtenu.
+    responses:
+        200:
+          body:
+            type: PlayerStats

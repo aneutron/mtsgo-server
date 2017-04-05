@@ -1,0 +1,23 @@
+#   A basic travis.yml boilerplate for Django projects
+#   https://gist.github.com/ndarville/3625246
+
+language: python
+
+python:
+  - 3.5
+  - 3.6
+
+before_install:
+  - export DJANGO_SETTINGS_MODULE=mtsgo.settings
+  - export PYTHONPATH=$HOME/builds/aneutron/mtsgo-server-failsafe
+
+install:
+  - pip install -r requirements.txt --quiet
+
+before_script:
+  - python manage.py makemigrations
+  - python manage.py migrate
+
+script:
+  - python manage.py check
+  - python -Wall manage.py test

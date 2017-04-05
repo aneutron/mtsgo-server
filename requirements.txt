@@ -1,0 +1,13 @@
+appdirs==1.4.3
+cycler==0.10.0
+Django==1.10
+django-tokenapi==0.2.5
+matplotlib==1.5.1
+numpy==1.12.1
+olefile==0.44
+packaging==16.8
+pyparsing==2.2.0
+python-dateutil==2.6.0
+pytz==2017.2
+six==1.10.0
+psutil==4.0.0
