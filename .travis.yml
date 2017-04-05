@@ -13,6 +13,8 @@ before_install:
 
 install:
   - pip install -r requirements.txt --quiet
+  - pip install coverage==3.4.3 --quiet
+  - pip install codecov --quiet
 
 before_script:
   - python manage.py makemigrations
@@ -20,4 +22,7 @@ before_script:
 
 script:
   - python manage.py check
-  - python -Wall manage.py test
+  - coverage run --source='.' manage.py test
+
+after_script:
+  - codecov --token=b5e3bd2d-2bde-475a-8693-86d45f30b6b8

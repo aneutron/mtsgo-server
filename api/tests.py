@@ -36,9 +36,11 @@ class AuthTest(TestCase):
 
 
 class RegisterTest(TestCase):
+
     def setUp(self):
         self.test_user1 = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
-        self.test_user = {
+        self.assertNotEqual(self.test_user1, None, "[API][Auth] Could not create test user.")
+        self.test_user2 = {
             'username': 'user1',
             'email': 'user1@myemail.com',
             'password': 'uza1pass'
@@ -63,7 +65,7 @@ class RegisterTest(TestCase):
             'email': 'mycoolemail@hey.me'
         }}), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 401, "[API][Auth] Wrong status code.")
-        self.assertEqual(r.json(), 'Missing parameters for registration', "[API][Auth] Wrong error message.")
+        self.assertEqual(r.json(), "Nom d'utilisateur déjà utilisé.", "[API][Auth] Wrong error message.")
 
     def testCorrectRegistration(self):
         pass

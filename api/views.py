@@ -34,7 +34,7 @@ class AuthNewView(View):
         try:
             user = User.objects.get(username=req_data['username'])
             if user:
-                return JsonResponse("Nom d'utilisateur déjà utilisé.")
+                return JsonResponse("Nom d'utilisateur déjà utilisé.", status=401, safe=False)
             user = User.objects.create_user(username=req_data['username'], email=req_data['email'],
                                             password=req_data['password'])
         except Exception as e:
