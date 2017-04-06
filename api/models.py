@@ -65,7 +65,7 @@ class Question(models.Model):
 class Spot(models.Model):
     centrex = models.FloatField(validators = [MinValueValidator(-90.0), MaxValueValidator(90.0)])
     centrey = models.FloatField(validators = [MinValueValidator(-180.0), MaxValueValidator(180.0)])
-    centrez = models.FloatField(default=0)
+    centrez = models.IntegerField(default=0)
     rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
     questionList = models.CharField(max_length=100, validators=[validate_comma_separated_integer_list])
@@ -74,7 +74,7 @@ class Spot(models.Model):
 
     # TODO: Test this method too.
     def getPosition(self):
-        return (self.centrex, self.centrey, self.centrez)
+        return [self.centrex, self.centrey, self.centrez]
 
     # TODO: Test this method
     def __str__(self):

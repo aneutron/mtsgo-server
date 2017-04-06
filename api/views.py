@@ -72,7 +72,7 @@ class UpdatePosition(View):
         if ('x' not in req_data) or ('y' not in req_data) or ('z' not in req_data):
             return JsonResponse(_('Malformed JSON Input'), status=401, safe=False)
         try:
-            x, y, z = float(req_data['x']), float(req_data['y']), float(req_data['z'])
+            x, y, z = float(req_data['x']), float(req_data['y']), int(req_data['z'])
         except ValueError as e1:
             handle_exception(e1, request=req)
             return JsonResponse(_('Malformed coordinates. Unable to parse to float.'), status=401, safe=False)
