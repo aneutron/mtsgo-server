@@ -7,6 +7,9 @@ python:
   - 3.5
   - 3.6
 
+git:
+  depth: 3
+
 before_install:
   - export DJANGO_SETTINGS_MODULE=mtsgo.settings
   - export PYTHONPATH=$HOME/builds/aneutron/mtsgo-server-failsafe

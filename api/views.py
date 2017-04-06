@@ -7,6 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import ugettext_lazy as _
 from mtsgo.tokenapi.views import token_new
 from mtsgo.geocalc import *
+from mtsgo.helpers import handle_exception
 from api.models import *
 import math, json, random, logging
 
@@ -65,20 +66,20 @@ class UpdatePosition(View):
         Met à jour la position du joueur.
         """
         player = Player.objects.get(account=req.user)
-        if not player:
-            return JsonResponse('Joueur introuvable.', status=500, safe=False)
         if 'position' not in req.json_data:
-            return JsonResponse('Malformed JSON Input', status=401, safe=False)
+            return JsonResponse(_('Malformed JSON Input'), status=401, safe=False)
         req_data = req.json_data['position']
         if ('x' not in req_data) or ('y' not in req_data) or ('z' not in req_data):
-            return JsonResponse('Malformed JSON Input', status=401, safe=False)
+            return JsonResponse(_('Malformed JSON Input'), status=401, safe=False)
         try:
             x, y, z = float(req_data['x']), float(req_data['y']), float(req_data['z'])
         except ValueError as e1:
             handle_exception(e1, request=req)
-            return JsonResponse('Malformed coordinates. Unable to parse to float.', status=401, safe=False)
+            return JsonResponse(_('Malformed coordinates. Unable to parse to float.'), status=401, safe=False)
         if (not math.isfinite(x)) or (not math.isfinite(y)) or (not math.isfinite(z)):
-            return JsonResponse('Your coordinates can\'t be infinity or NaN, idiot. Tg.', status=401, safe=False)
+            return JsonResponse(_('Your coordinates can\'t be infinity or NaN, idiot. TG.'), status=401, safe=False)
+        if (not -180 <= y <= 180) or (not -90 <= x <= 90):
+            return JsonResponse(_('Coordinates out of range.'), status=401, safe=False)
         player.positionx = x
         player.positiony = y
         player.positionz = z
@@ -86,8 +87,8 @@ class UpdatePosition(View):
             player.save()
         except Exception as e2:
             handle_exception(e2, req)
-            return JsonResponse('Could not update position.', status=500, safe=False)
-        return JsonResponse('Position updated successfully.', status=200, safe=False)
+            return JsonResponse(_('Could not update position.'), status=500, safe=False)
+        return JsonResponse(_('Position updated successfully.'), status=200, safe=False)
 
 
 class Questions(View):
@@ -101,14 +102,22 @@ class Questions(View):
             return self._get_nearby_spots(request)
 
     def _get_question_by_id(self, qid):
-        try:
-            qid = int(qid)
-        except ValueError:
-            return JsonResponse('Could not parse question id [int]', status=401, safe=False)
-        quest = Question.object.get(qid)
-        if not quest:
-            return JsonResponse('Question non trouvée.', status=404, safe=False)
-        return JsonResponse(quest, status=200, safe=False)
+        # Validated by the router.
+        qid = int(qid)
+        quest = Question.objects.filter(pk=qid)
+        if not quest.exists():
+            return JsonResponse(_('Question non trouvée.'), status=404, safe=False)
+        quest = Question.objects.get(pk=qid)
+        return JsonResponse({
+            'question': quest.questionText,
+            'answer1': quest.answer1,
+            'answer2': quest.answer2,
+            'answer3': quest.answer3,
+            'answer4': quest.answer4,
+            'score': quest.score,
+            'difficulty': quest.difficulty,
+            'topic': quest.topic
+        }, status=200)
 
     def _get_nearby_spots(self, req):
         # FIXME: This bad boy is gonna need to be optimized, A LOT.

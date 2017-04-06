@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.http.request import bytes_to_text
 from django.views.decorators.csrf import csrf_exempt
 
+
 # Préférer celle là aux autres. On n'aura besoin d'entrées JSON qu'en POST.
 def try_decode_json(view_func):
     """
@@ -26,6 +27,8 @@ def try_decode_json(view_func):
                     data = json.loads(raw_d)
                 request.json_data = data
             except Exception as e:
-                return HttpResponse('JSON input absent or not encoded correctly for a POST request. '+e.__str__(), status=400)
+                return HttpResponse('JSON input absent or not encoded correctly for a POST request. ' + e.__str__(),
+                                    status=400)
         return view_func(request, *args, **kwargs)
+
     return _wrapped_view

@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import EmailValidator
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from api.models import *
 from tokenapi.tokens import token_generator
@@ -40,7 +41,6 @@ class AuthTest(TestCase):
 
 
 class RegisterTest(TestCase):
-
     def setUp(self):
         self.test_user1 = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
         self.assertNotEqual(self.test_user1, None, "[API][Auth] Could not create test user.")
@@ -79,7 +79,7 @@ class RegisterTest(TestCase):
             validate_password('n')
         except ValidationError as e:
             error_msg = e.messages[0]
-        #Now test the error_msg
+        # Now test the error_msg
         r = self.client.post('/api/auth/new/', data=json.dumps({'creds': {
             'username': 'user2ddkd',
             'password': 'n',
@@ -106,19 +106,188 @@ class RegisterTest(TestCase):
         }}), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 200, "[API][Auth] Wrong status code.")
         self.assertEqual(r.json(), _('Account creation successful.'), "[API][Auth] Wrong success message.")
+        user = authenticate(username='user2ddkd', password='nsshhhhh')
+        self.assertNotEqual(user, False, "[API][Auth] Account creation unsuccessful.")
+        self.assertEqual(user.email, 'mycoolemail@heye.fr', "[API][Auth] Wrong e-mail upon registration.")
 
 
 class UpdatePositionTest(TestCase):
-    pass
+    def setUp(self):
+        self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user)
+        self.player.save()
+        self.token = token_generator.make_token(self.test_user)
+
+    def testMalformedInput(self):
+        # Missing position field.
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Malformed JSON Input')), "[API][Position] Wrong error message.")
+        # Missing x,y or z fields
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 125,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Malformed JSON Input')), "[API][Position] Wrong error message.")
+        # Badly written coordinates.
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 'totoro',
+                'y': '1.jo',
+                'z': '',  # John Cena's Value
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Malformed coordinates. Unable to parse to float.')),
+                         "[API][Position] Wrong error message.")
+        # Infinite coordinates
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 'inf',
+                'y': 12,
+                'z': 5
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Your coordinates can\'t be infinity or NaN, idiot. TG.')),
+                         "[API][Position] Wrong error message.")
+        # Out of range
+
+    def testBadValues(self):
+        # Badly written coordinates.
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 'totoro',
+                'y': '1.jo',
+                'z': '',  # John Cena's Value
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Malformed coordinates. Unable to parse to float.')),
+                         "[API][Position] Wrong error message.")
+        # Infinite coordinates
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 'inf',
+                'y': 12,
+                'z': 5
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Your coordinates can\'t be infinity or NaN, idiot. TG.')),
+                         "[API][Position] Wrong error message.")
+        # Out of range
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': 5689,
+                'y': 12,
+                'z': 5
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Coordinates out of range.')), "[API][Position] Wrong error message.")
+
+    def testCorrectPosUpdate(self):
+        # Out of range
+        r = self.client.post('/api/position/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'position': {
+                'x': -2.3569,
+                'y': 12.2365,
+                'z': 0
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Position updated successfully.')), "[API][Position] Wrong success message.")
+        del self.player
+        player = Player.objects.get(account=self.test_user)
+        self.assertEqual(player.getPosition(), (-2.3569, 12.2365, 0), "[API][Position] Position not updated.")
 
 
 class SingleQuestionTest(TestCase):
-    pass
+    def setUp(self):
+        self.test_question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.test_question.save()
+        self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.token = token_generator.make_token(self.test_user)
+
+    def testCorrectRetrieve(self):
+        r = self.client.get('/api/questions/' + str(self.test_question.pk) + "/", data={
+            'user_id': self.test_user.pk,
+            'token': self.token
+        })
+        # Flemmard
+        packet_quest = None
+        quest = self.test_question
+        packed_quest = {
+            'question': quest.questionText,
+            'answer1': quest.answer1,
+            'answer2': quest.answer2,
+            'answer3': quest.answer3,
+            'answer4': quest.answer4,
+            'score': quest.score,
+            'difficulty': quest.difficulty,
+            'topic': quest.topic
+        }
+        self.assertEqual(r.status_code, 200, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), packed_quest, "[API][SingleQuestion] Wrong question returned.")
+
+    def testBadIdInput(self):
+        # Not an int value.
+        r = self.client.get('/api/questions/5sffg/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token
+        })
+        self.assertEqual(r.status_code, 404, "[API][Position] Wrong status code.")
+        # Not an int value.
+        r = self.client.get('/api/questions/58956/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token
+        })
+        self.assertEqual(r.status_code, 404, "[API][Position] Wrong status code.")
+        self.assertEqual(r.json(), str(_('Question non trouvée.')), "[API][SingleQuestion] Wrong error message.")
 
 
 class NeighbouringQuestionsTest(TestCase):
     pass
 
 
+# This bad boy over here ...
+class AnswerQuestionTest(TestCase):
+    pass
+
+
 class PlayerInfoTest(TestCase):
+    pass
+
+
+class PlayerHistoryTest(TestCase):
     pass

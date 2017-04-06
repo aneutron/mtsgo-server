@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import validate_comma_separated_integer_list, MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.conf import settings
-from mtsgo.helpers import handle_exception
 import time
 
 
@@ -17,9 +16,11 @@ class Player(models.Model):
     score = models.IntegerField(default=0)
     questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
 
+    #TODO: Test this method
     def getPosition(self):
         return (self.positionx, self.positiony, self.positionz)
 
+    #TODO: Test this method.
     def addQuestionToHistory(self, qid):
         qids = []
         if len(self.questionHistory) > 0:
@@ -33,7 +34,7 @@ class Player(models.Model):
         qids.append(str(qid))
         self.questionHistory = ','.join(qids)
 
-
+    # TODO: Test this method
     def __str__(self):
         return self.nickname
 
@@ -56,6 +57,7 @@ class Question(models.Model):
     topic = models.CharField(max_length=20)  # theme de la question
     score = models.IntegerField()  # points rapportes
 
+    # TODO: Test this method
     def __str__(self):
         return self.questionText
 
@@ -70,9 +72,11 @@ class Spot(models.Model):
     startTime = models.IntegerField(default=time.time)
     delay = models.IntegerField()
 
+    # TODO: Test this method too.
     def getPosition(self):
         return (self.centrex, self.centrey, self.centrez)
 
+    # TODO: Test this method
     def __str__(self):
         return 'x=' + str(self.centrex) + ' y=' + str(self.centrey) + ' z=' + str(self.centrez)
 
@@ -81,5 +85,6 @@ class ExclusionZone(models.Model):
     name = models.CharField(max_length=20)
     points = models.TextField()
 
+    #TODO: Test this method
     def __str__(self):
         return self.name
