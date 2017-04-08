@@ -68,7 +68,7 @@ class Spot(models.Model):
     centrez = models.IntegerField(default=0)
     rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
-    questionList = models.CharField(max_length=100, validators=[validate_comma_separated_integer_list])
+    questionList = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
     startTime = models.IntegerField(default=time.time)
     delay = models.IntegerField()
 
@@ -76,9 +76,12 @@ class Spot(models.Model):
     def getPosition(self):
         return [self.centrex, self.centrey, self.centrez]
 
-    # TODO: Test this method
-    def __str__(self):
-        return 'x=' + str(self.centrex) + ' y=' + str(self.centrey) + ' z=' + str(self.centrez)
+    def loadQuestions(self):
+        self.questions = []
+        if len(self.questionList) == 0:
+            return
+        questions_ids = [int(y) for y in self.questionList.split(',')]
+        self.questions = Question.objects.filter(id__in=questions_ids)
 
 
 class ExclusionZone(models.Model):

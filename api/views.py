@@ -174,10 +174,10 @@ class Questions(View):
             return JsonResponse('Spot not found.', status=404, safe=False)
         # Check if user is within answering distance
         if geo_distance_between_points(spot.getPosition(), player.getPosition()) > spot.rayon:
-            return JsonResponse('Too far to answer this question.', status=403, safe=False)
+            return JsonResponse('Too far to answer this question.', status=401, safe=False)
         # Finally check is the answer is correct.
         if spot.currentQuestion.rightAnswer != answ_id:
-            return JsonResponse('Sorry wrong answer.', status=401, safe=False)
+            return JsonResponse('Sorry wrong answer.', status=402, safe=False)
         # If the user answered correctly, add score points, and add question to history.
         player.score = player.score + spot.currentQuestion.score
         player.addQuestionToHistory(spot.currentQuestion.pk)

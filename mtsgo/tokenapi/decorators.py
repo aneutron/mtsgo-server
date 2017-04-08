@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from functools import wraps
 
 
-def token_required(view_func):
+def token_required(view_func, admin=False):
     """Decorator which ensures the user has provided a correct user and token pair."""
 
     @csrf_exempt
@@ -28,6 +28,9 @@ def token_required(view_func):
 
         user = authenticate(pk=user, token=token)
         if user:
+            if admin:
+                if not user.is_staff:
+                    return HttpResponseForbidden("Not an admin.")
             request.user = user
             return view_func(request, *args, **kwargs)
 

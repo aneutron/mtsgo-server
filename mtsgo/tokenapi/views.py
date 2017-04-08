@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from django.http import HttpResponseForbidden
 from django.http import JsonResponse
 from tokenapi.tokens import token_generator
 
@@ -10,7 +11,7 @@ User = get_user_model()
 # Required: username&password
 # Returns: success&token&user
 
-def token_new(request):
+def token_new(request, admin=False):
     if ('username' in request.json_data) or ('password' in request.json_data):
         username = request.json_data['username']
         password = request.json_data['password']
@@ -21,6 +22,9 @@ def token_new(request):
     if username and password:
         user = authenticate(username=username, password=password)
         if user:
+            if admin:
+                if not user.is_staff:
+                    return HttpResponseForbidden("Not an admin.")
             data = {
                 'token': token_generator.make_token(user),
                 'user_id': user.pk,

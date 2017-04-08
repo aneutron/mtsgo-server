@@ -164,7 +164,7 @@ types:
       responses:
         200:
           description: Dans le cas où le compte a été créé correctement.
-        500:
+        401:
           description: Dans le cas où la création du compte a échoué.
           body:
             application/text:
@@ -189,8 +189,14 @@ types:
     responses:
       200:
           description: La mise à jour s'est faite correctement.
-      500:
+      401:
           description: Une erreur a eu lieu lors de la mise à jour.
+          body:
+            application/json:
+              type: string
+              description: Message d'erreur
+      403:
+          description: Authentification impossible.
 /questions:
   description: Interface pour obtenir les questions environnantes et essayer d'y répondre.
   get:
@@ -209,12 +215,33 @@ types:
         body:
           type: QuestionList
           description: Une liste des questions proches du joueurs.
+      403:
+          description: Authentification impossible.
   post:
     description: Tenter de répondre à une question
     queryParameters:
+      user_id:
+        type: integer
+        description: L'id utilisateur que vous avez obtenu.
+      token:
+        type: string
+        description: Le jeton d'authentification que vous avez obtenu.
       answer:
         type: Answer
         description: Réponse à la question
+    responses:
+      200:
+        description: Réponse correcte
+      403:
+        description: Authentification impossible.
+      401:
+        description: Paramètres de requêtes incorrects.
+        body:
+          application/json:
+            type: string
+            description: Message d'erreur.
+      402:
+        description: Mauvaise réponse.
   /{question_id}/:
     get:
       description: Obtenir les détails d'une question identifiée par __question_id__. __Attention,__ Dans des requêtes GET, on parle exclusivement de paramètres GET.
@@ -232,6 +259,8 @@ types:
             description: Détails de la question
         404:
           description: Question non trouvée.
+        403:
+          description: Authentification impossible.
 /history/:
   description: Obtenir l'historique des dernières questions répondues dans le jeu.
   get:
@@ -250,6 +279,8 @@ types:
       200:
         body:
           type: History
+      403:
+          description: Authentification impossible.
 /player/:
   description: Obtenir les informations sur le joueur.
   get:
@@ -267,3 +298,5 @@ types:
         200:
           body:
             type: PlayerStats
+        403:
+          description: Authentification impossible.
