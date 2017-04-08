@@ -299,7 +299,7 @@ class NeighbouringQuestionsTest(TestCase):
             currentQuestion=self.test_question,
             delay=0,
             rayon=5,
-            questionList='[1]',
+            questionList='1',
         )
         self.test_spot.save()
         self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
@@ -346,11 +346,89 @@ class NeighbouringQuestionsTest(TestCase):
 
 # This bad boy over here ...
 class AnswerQuestionTest(TestCase):
-    pass
+
+    def setUp(self):
+        # TODO: Use mockup to properly test this.
+        self.test_question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.test_question.save()
+        self.test_spot = Spot(
+            centrex=-2.569111,
+            centrey=1.256950,
+            centrez=0,
+            currentQuestion=self.test_question,
+            delay=0,
+            rayon=5,
+            questionList='1',
+        )
+        self.test_spot.save()
+        self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user)
+        self.token = token_generator.make_token(self.test_user)
+        self.player.positionx = -2.569110
+        self.player.positiony = 1.256957
+        self.player.save()
+
+    def testGoodAnswer(self):
+        r = self.client.get('/api/questions/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token,
+        })
+        data = r.json()
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                        'qid': data['questions'][0]['id'],
+                        'answ_number': 1,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 200, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), 'Successfully answered the question.', "[API][AnswerQuestionTest] Wrong information.")
+
+    def testBadAnswer(self):
+        r = self.client.get('/api/questions/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token,
+        })
+        data = r.json()
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                        'qid': data['questions'][0]['id'],
+                        'answ_number': 2,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 402, "[API][AnswerQuestionTest] Wrong status code.")
+
 
 
 class PlayerInfoTest(TestCase):
-    pass
+
+    def setUp(self):
+        self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user)
+        self.player.save()
+        self.token = token_generator.make_token(self.test_user)
+
+    def testBeforeAnsweringQuestion(self):
+        r = self.client.get('/api/player/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token,
+        })
+        self.assertEqual(r.status_code, 200, "[API][PlayerInfoTest] Wrong status code.")
+        self.assertEqual(r.json(), {'nickname': 'user1', 'score': 0}, "[API][PlayerInfoTest] Wrong information.")
+
 
 
 class PlayerHistoryTest(TestCase):

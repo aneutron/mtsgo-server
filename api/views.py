@@ -215,8 +215,11 @@ class PlayerInfo(View):
     """
 
     def get(self, req):
-        data = serializers.serialize('json', Player.objects.filter(account=req.user), fields=('nickname', 'score'))
-        return JsonResponse(data, status=200, safe=False)
+        player = Player.objects.get(account=req.user)
+        return JsonResponse({
+            'nickname': req.user.username,
+            'score': player.score,
+        }, status=200, safe=False)
 
 
 class PlayerHistory(View):
