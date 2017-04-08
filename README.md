@@ -15,16 +15,30 @@ Le projet dépend des librairies:
 - pymysql (0.7.10): Le driver classique MySQLdb ne marche pas sur Python 3 pour le moment, c'est pourquoi cet alternative est utilisée. (Elle est installée comme si elle était MySQLdb)
 
 ## Installation
-
-D'abord installez les dépendances (Préférablement dans un __environnement virtuel__ pour éviter les conflits de dépendances):
-
-`pip install django==1.10 django-tokenapi==0.2.5 matplotlib==1.5.3 pymysql==0.7.10`
-
-Puis positionnez vous dans le dossier que vous souhaitez, et cloner le projet:
+D'abord positionnez vous dans le dossier que vous souhaitez, et cloner le projet:
 
 `git clone https://github.com/aneutron/mtsgo-server`
 
-Modifiez les paramètres de votre application à présent dans `mtsgo-server/mtsgo/settings.py`, ensuite appliquez les migrations à votre BDD avec `python mtsgo-server/manage.py makemigrations` puis `python mtsgo-server/manage.py migrate`, et lancez le serveur test de django en utilisant `python mtsgo-server/manage.py runserver`.
+Ensuite installez les dépendances (Préférablement dans un __environnement virtuel__ pour éviter les conflits de dépendances):
+
+`pip install -r requirements.txt`
+
+Eventuellement modifiez les paramètres dans `mtsgo/settings.py`, ensuite appliquez les schémas à votre BDD avec `python mtsgo-server/manage.py makemigrations` puis `python mtsgo-server/manage.py migrate`.
+
+Pour lancer votre serveur de test, éxecutez:
+
+`python manage.py runserver`
+
+Vous pouvez bien évidemment l'installer comme application uWSGI derrière Apache ou Nginx. Un autre guide viendra après.
+
+
+## Code coverage
+
+Pour tester la conformité à la spécification de l'API, et assurer une qualité du code assez correcte, des tests ont été écrit pour chaque API
+_(mtsgo/test.py, api/test.py, superapi/test.py)_ , et sont lancés automatiquement à chaque _commit_, et des statistiques de code coverage sont générés.
+
+Voici un des graphes montrant la couverture avec l'arborescence du projet:
+![Code Coverage Tree](https://codecov.io/gh/aneutron/mtsgo-server/branch/master/graphs/icicle.svg?token=DCy53fzIpa)
 
 ## Auteurs
 
