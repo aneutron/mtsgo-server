@@ -38,7 +38,7 @@ Pour tester la conformité à la spécification de l'API, et assurer une qualit�
 _(mtsgo/test.py, api/test.py, superapi/test.py)_ , et sont lancés automatiquement à chaque _commit_, et des statistiques de code coverage sont générés.
 
 Voici un des graphes montrant la couverture avec l'arborescence du projet:
-![Code Coverage Tree](https://codecov.io/gh/aneutron/mtsgo-server/branch/master/graphs/icicle.svg?token=DCy53fzIpa)
+![Code Coverage Tree](https://codecov.io/gh/aneutron/mtsgo-server/branch/dev-alpha/graphs/icicle.svg?token=DCy53fzIpa)
 
 ## Auteurs
 
