@@ -133,7 +133,7 @@ class SpotsView(View):
         # NOTE: The "spot" field is decoded so if the questionList was encoded as a list as it should be, this is the
         # right way to test it.
         # TODO: More tolerance towards questionList format.
-        if type(data['questionList']) != type(''):
+        if type(data['questionList']) != type([]):
             return JsonResponse(_('Unable to parse correct question list.'), status=401, safe=False)
         # Validate numeric values.
         if (not math.isfinite(x)) or (not math.isfinite(y)) or (not math.isfinite(z)):
@@ -184,7 +184,7 @@ class QuestionsView(View):
                 }
                 return JsonResponse(data, status=200)
             except Question.DoesNotExist:
-                return JsonResponse(status=404, safe=False)
+                return JsonResponse('Question not Found', status=404, safe=False)
         else:
             data = {'questions': []}
             for quest in Question.objects.all():
@@ -203,16 +203,18 @@ class QuestionsView(View):
 
     def post(self, request, qid=None):
         if qid:
-            self._update_question(request, qid)
+            return self._update_question(request, qid)
         else:
-            self._insert_question(request)
+            return self._insert_question(request)
 
     def _update_question(self, req, qid):
         needed_keys = ['questionText', 'answer1', 'answer2', 'answer3', 'answer4', 'rightAnswer', 'difficulty', 'score',
                        'topic']
-        if ('question' not in req.json_data) or (type(req.json_data['question']) != type(dict)) or (
-            req.json_data['question'].keys() != needed_keys):
+        if ('question' not in req.json_data) or (type(req.json_data['question']) is not type({})):
             return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        for k in needed_keys:
+            if k not in req.json_data.keys():
+                return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
         try:
             # TODO: Rewrite the previously coded APIs to support this.
             # http://stackoverflow.com/questions/5503925/how-do-i-use-a-dictionary-to-update-fields-in-django-models
@@ -228,11 +230,33 @@ class QuestionsView(View):
     def _insert_question(self, req):
         needed_keys = ['questionText', 'answer1', 'answer2', 'answer3', 'answer4', 'rightAnswer', 'difficulty', 'score',
                        'topic']
-        if ('question' not in req.json_data) or (type(req.json_data['question']) != type(dict)) or (
-                    req.json_data['question'].keys() != needed_keys):
+        if ('question' not in req.json_data) or (type(req.json_data['question']) is not type({})):
             return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        data = req.json_data['question']
+        for k in needed_keys:
+            if k not in data.keys():
+                return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
         try:
-            quest = Question(**req['question'])
+            questionText=data['questionText']
+            answer1, answer2, answer3, answer4 = data['answer1'], data['answer2'], data['answer3'], data['answer4']
+            difficulty = int(data['difficulty'])
+            score = int(data['score'])
+            topic = data['topic']
+            rightAnswer = int(data['rightAnswer'])
+        except ValueError:
+            return JsonResponse(_('Unable to parse correct numeric literals.'), status=401, safe=False)
+        try:
+            quest = Question(
+                questionText=questionText,
+                answer1=answer1,
+                answer2=answer2,
+                answer3=answer3,
+                answer4=answer4,
+                difficulty=difficulty,
+                score=score,
+                topic=topic,
+                rightAnswer=rightAnswer
+            )
             quest.save()
             return JsonResponse(_('Question added successfully.'), status=200, safe=False)
         except ValidationError as e:

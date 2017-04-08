@@ -48,7 +48,6 @@ def try_decode_json(view_func):
                 pass
             data = QueryDict(request.body)
             for i in data:
-                print('i='+data[i])
                 try:
                     s = json.loads(data[i])
                     request.json_data[i]=s
