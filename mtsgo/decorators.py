@@ -1,9 +1,8 @@
 import json
 from functools import wraps
 from json import JSONDecodeError
-
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import QueryDict
 from django.http.request import bytes_to_text
 from django.views.decorators.csrf import csrf_exempt
 
@@ -38,6 +37,24 @@ def try_decode_json(view_func):
                     request.json_data[i]=s
                 except JSONDecodeError:
                     request.json_data[i] = request.POST[i]
+        if request.method == 'DELETE':
+            try:
+                raw_d = bytes_to_text(request.body, settings.DEFAULT_CHARSET)
+                data = {}
+                if len(raw_d) > 0:
+                    data = json.loads(raw_d)
+                request.json_data = data
+            except JSONDecodeError as e:
+                pass
+            data = QueryDict(request.body)
+            for i in data:
+                print('i='+data[i])
+                try:
+                    s = json.loads(data[i])
+                    request.json_data[i]=s
+                except JSONDecodeError:
+                    request.json_data[i] = data[i]
+
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view

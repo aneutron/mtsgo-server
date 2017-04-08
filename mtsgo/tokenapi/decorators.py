@@ -13,11 +13,10 @@ def token_required(view_func, admin=False):
         user = None
         token = None
 
-        if hasattr(request, 'json_data'):
-            if ('user_id' in request.json_data) and ('token' in request.json_data):
-                user = request.json_data['user_id']
-                token = request.json_data['token']
-                del request.json_data['token'], request.json_data['user_id']
+        if ('user_id' in request.json_data) and ('token' in request.json_data):
+            user = request.json_data['user_id']
+            token = request.json_data['token']
+            del request.json_data['token'], request.json_data['user_id']
 
         # Now that I think about it, it's a bad idea to get data on JSON reqs.
         if ('user_id' in request.GET) or ('token' in request.GET):
