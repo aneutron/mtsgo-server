@@ -15,6 +15,7 @@ class Player(models.Model):
     positionz = models.FloatField(default=0.0)
     score = models.IntegerField(default=0)
     questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
+    lastActivity = models.IntegerField(default=time.time)
 
     #TODO: Test this method
     def getPosition(self):

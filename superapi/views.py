@@ -3,10 +3,7 @@ import math
 from django.core.exceptions import ValidationError
 from django.views import View
 from django.http import JsonResponse
-from django.core import serializers
-from django.core.validators import validate_comma_separated_integer_list
 from django.utils.translation import gettext_lazy as _
-from mtsgo.helpers import handle_exception
 from mtsgo.tokenapi.views import token_new
 from api.models import *
 import psutil, json
@@ -16,8 +13,7 @@ class AuthView(View):
     def post(self, req):
         return token_new(req, True)
 
-
-# TODO: Add APIs to delete spots and questions.
+# FIXME: Edit to support **kwargs constructors.
 class SpotsView(View):
     def get(self, request, spot_id=None):
         if spot_id:
@@ -31,6 +27,20 @@ class SpotsView(View):
                 pass
         else:
             return self._get_all_spots()
+
+    def post(self, request, spot_id=None):
+        if spot_id:
+            self._update_spot_by_id(request, spot_id)
+        else:
+            self._insert_spot(request)
+
+    def delete(self, request, spot_id):
+        try:
+            spot = Spot.objects.get(pk=spot_id)
+            spot.delete()
+            return JsonResponse(_('Spot successfully deleted.'), status=200, safe=False)
+        except Spot.DoesNotExist:
+            return JsonResponse(_('Spot with ID=' + str(spot_id) + ' not found.'), status=404, safe=False)
 
     def _get_spot_by_id(self, spot_id):
         spot = Spot.objects.get(pk=spot_id)
@@ -77,12 +87,6 @@ class SpotsView(View):
             spots.append(self._get_spot_by_id(spot_id))
         data = {"spots": spots}
         return JsonResponse(data, status=200)
-
-    def post(self, request, spot_id=None):
-        if spot_id:
-            self._update_spot_by_id(request, spot_id)
-        else:
-            self._insert_spot(request)
 
     def _update_spot_by_id(self, request, spot_id):
         return JsonResponse(_('Not yet implemented.'), status=500, safe=False)
@@ -158,21 +162,80 @@ class SpotsView(View):
         )
 
 
+# FIXME: Add a Question.packAsDict() method.
 class QuestionsView(View):
     def get(self, request, qid=None):
         if qid:
             try:
-                question = Question.objects.get(pk=qid)
-                data = serializers.serialize('json', question)
-                return JsonResponse(data, status=200, safe=False)
+                quest = Question.objects.get(pk=qid)
+                data = {
+                    'id': quest.id,
+                    'question': quest.questionText,
+                    'answer1': quest.answer1,
+                    'answer2': quest.answer2,
+                    'answer3': quest.answer3,
+                    'answer4': quest.answer4,
+                    'score': quest.score,
+                    'difficulty': quest.difficulty,
+                    'topic': quest.topic
+                }
+                return JsonResponse(data, status=200)
             except Question.DoesNotExist:
                 return JsonResponse(status=404, safe=False)
         else:
-            data = serializers.serialize('json', Question.objects.all())
-            return JsonResponse(data, status=200, safe=False)
+            data = {'questions': []}
+            for quest in Question.objects.all():
+                data['questions'].append({
+                    'id': quest.id,
+                    'question': quest.questionText,
+                    'answer1': quest.answer1,
+                    'answer2': quest.answer2,
+                    'answer3': quest.answer3,
+                    'answer4': quest.answer4,
+                    'score': quest.score,
+                    'difficulty': quest.difficulty,
+                    'topic': quest.topic
+                })
+            return JsonResponse(data, status=200)
 
     def post(self, request, qid=None):
-        pass
+        if qid:
+            self._update_question(request, qid)
+        else:
+            self._insert_question(request)
+
+    def _update_question(self, req, qid):
+        needed_keys = ['questionText', 'answer1', 'answer2', 'answer3', 'answer4', 'rightAnswer', 'difficulty', 'score',
+                       'topic']
+        if ('question' not in req.json_data) or (type(req.json_data['question']) != type(dict)) or (
+            req.json_data['question'].keys() != needed_keys):
+            return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        try:
+            # TODO: Rewrite the previously coded APIs to support this.
+            # http://stackoverflow.com/questions/5503925/how-do-i-use-a-dictionary-to-update-fields-in-django-models
+            Question.objects.filter(pk=qid).update(**req['question'])
+            return JsonResponse(_('Question updated successfully.'), status=200, safe=False)
+        except Question.DoesNotExist:
+            return JsonResponse(_('Question with ID='+str(qid)+' not found.'), status=404, safe=False)
+        except ValidationError as e:
+            return JsonResponse(_('Question parameters are not correctly set: '+e.message()), status=401, safe=False)
+        except Exception:
+            return JsonResponse(_('Unable to update the question.'), status=500, safe=False)
+
+    def _insert_question(self, req):
+        needed_keys = ['questionText', 'answer1', 'answer2', 'answer3', 'answer4', 'rightAnswer', 'difficulty', 'score',
+                       'topic']
+        if ('question' not in req.json_data) or (type(req.json_data['question']) != type(dict)) or (
+                    req.json_data['question'].keys() != needed_keys):
+            return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        try:
+            quest = Question(**req['question'])
+            quest.save()
+            return JsonResponse(_('Question added successfully.'), status=200, safe=False)
+        except ValidationError as e:
+            return JsonResponse(_('Question parameters are not correctly set: ' + e.message()), status=401, safe=False)
+        except Exception:
+            return JsonResponse(_('Unable to update the question.'), status=500, safe=False)
 
 
 class CarteView(View):
@@ -198,8 +261,43 @@ class ServerStateView(View):
 
 
 class PlayerPositionView(View):
-    pass
+    def get(self, req, pid=None):
+        if pid:
+            return self._get_player_position(pid)
+        else:
+            return self._all_players_positions()
+
+    def _get_player_position(self, pid):
+        try:
+            player = Player.objects.get(pk=pid)
+            return JsonResponse(data={
+                'id': player.account.id,
+                'x': player.positionx,
+                'y': player.positiony,
+                'z': player.positionz
+            }, status=200)
+        except Player.DoesNotExist:
+            return JsonResponse(_('Unable to find player with ID='+str(pid)+'.'), status=404, safe=False)
+
+    def _all_players_positions(self):
+        players = Player.objects.all()
+        data = []
+        for player in players:
+            data.append({
+                'id': player.account.id,
+                'x': player.positionx,
+                'y': player.positiony,
+                'z': player.positionz
+            })
+        return JsonResponse(data, status=200, safe=False)
 
 
 class StatsView(View):
-    pass
+    def get(self, req):
+        consideredActive = 600
+        data = {
+            'nbrQ': Question.objects.count(),
+            'nbrJ': Player.objects.count(),
+            'nbrJConnected': Player.objects.filter(lastActivity__gte=time.time()-consideredActive)
+        }
+        return JsonResponse(data, status=200)

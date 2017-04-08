@@ -1,8 +1,7 @@
 #%RAML 1.0
-version: 1.0b
-title: MTSGO Supervision API
+version: 1.0 alpha 1
+title: MTSGO Supervision
 mediaType: application/json
-baseUri: https://mtsgo.resel.fr/superapi/
 ###########################################
 #		 	Type Definitions			  #
 ###########################################
@@ -154,10 +153,10 @@ types:
   EtatServeur:
     type: object
     properties:
-      cpu: integer
-      ram: integer
-      DISKTOTAL: integer
-      DISKUSED: integer
+      cpuPercent: integer
+      ramPercent: integer
+      diskTotal: integer
+      diskUsed: integer
 
 #############################################
 #			API Definitions					#
@@ -237,23 +236,22 @@ types:
           description: Spot non retrouvé.
         403:
           description: Authentification impossible.
-
-/stats:
-  description: Obtention des statistiques sur le serveur _(Joueurs, Questions, etc.)_
-  get:
-    description: Retourne les statistiques actuels.
-    queryParameters:
-        authToken:
-          description: Le jeton d'authentification.
+    delete:
+      description: Supprime le spot concerné.
+      queryParameters:
+        token:
           type: string
+          description: Jeton d'authentification.
         user_id:
           type: integer
           description: ID de l'administrateur.
-    responses:
-      200:
-        body:
-          application/json:
-            type: Stats
+      responses:
+        200:
+          description: La suppression a été un succès.
+        404:
+          description: Impossible de trouver le spot avec cet ID.
+        403:
+          description: Authentification impossible.
 
 /questions:
   description: Obtention, insértion et modification des questions dans le jeu.
@@ -355,6 +353,42 @@ types:
             description: Le lien vers la carte.
       403:
           description: Authentification impossible
+
+/stats:
+  description: Obtention des statistiques sur le serveur _(Joueurs, Questions, etc.)_
+  get:
+    description: Retourne les statistiques actuels.
+    queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Stats
+
+/state/:
+  description: Information à propos des ressources du serveur.
+  get:
+    description: Obtenir les informations à propos des ressources du serveur.
+    queryParameters:
+      token:
+        type: string
+        description: Jeton d'authentification.
+      user_id:
+        type: integer
+        description: ID de l'administrateur.
+    responses:
+      200:
+        body:
+          application/json:
+            type: EtatServeur
+      403:
+        description: Authentification impossible.
 
 /position:
   description: __Uniquement disponible dans la version de développement pour faciliter les test__
