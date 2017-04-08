@@ -30,9 +30,9 @@ class SpotsView(View):
 
     def post(self, request, spot_id=None):
         if spot_id:
-            self._update_spot_by_id(request, spot_id)
+            return self._update_spot_by_id(request, spot_id)
         else:
-            self._insert_spot(request)
+            return self._insert_spot(request)
 
     def delete(self, request, spot_id):
         try:
@@ -81,7 +81,7 @@ class SpotsView(View):
         return data
 
     def _get_all_spots(self):
-        spots_id = Spot.objects.all().values('id')
+        spots_id = [s.pk for s in Spot.objects.all()]
         spots = []
         for spot_id in spots_id:
             spots.append(self._get_spot_by_id(spot_id))
@@ -96,7 +96,7 @@ class SpotsView(View):
             return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
         data = request.json_data['spot']
         validated_spot = self._validate_spot_data(data)
-        if validated_spot is not True:
+        if type(validated_spot) is not type(Spot()):
             return validated_spot
         try:
             validated_spot.save()
@@ -116,13 +116,16 @@ class SpotsView(View):
         needed_keys = ['centrex', 'centrey', 'centrez', 'rayon', 'currentQuestion', 'questionList', 'startTime',
                        'delay']
         # If the first one fails first, the second is not verified, hence it's more economic this way.
-        if (type(data) is not type(dict)) or (data.keys() != needed_keys):
+        if type(data) is not type({}):
             return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+        for k in needed_keys:
+            if k not in data.keys():
+                return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
         # Try parsing all numeric literals.
         try:
-            x, y, z = float(data['centrex']), float('centrey'), int('centrez')
+            x, y, z = float(data['centrex']), float(data['centrey']), int(data['centrez'])
             rayon = int(data['rayon'])
-            currentQuestion = int(data['currentQuestion'])
+            int(data['currentQuestion'])
             startTime, delay = int(data['startTime']), int(data['delay'])
         except ValueError:
             return JsonResponse(_('Unable to parse correct numeric literals.'), status=401, safe=False)
@@ -130,7 +133,7 @@ class SpotsView(View):
         # NOTE: The "spot" field is decoded so if the questionList was encoded as a list as it should be, this is the
         # right way to test it.
         # TODO: More tolerance towards questionList format.
-        if type(data['questionList']) != type(list):
+        if type(data['questionList']) != type(''):
             return JsonResponse(_('Unable to parse correct question list.'), status=401, safe=False)
         # Validate numeric values.
         if (not math.isfinite(x)) or (not math.isfinite(y)) or (not math.isfinite(z)):
@@ -138,10 +141,10 @@ class SpotsView(View):
         if (not -180 <= y <= 180) or (not -90 <= x <= 90):
             return JsonResponse(_('Latitude and Longitude are out of range.'), status=401, safe=False)
         # Verify that the chosen current question exists.
-        currentQuestion = Question.objects.filter(pk=data['currentQuestion'])
+        currentQuestion = Question.objects.filter(pk=int(data['currentQuestion']))
         if not currentQuestion.exists():
             return JsonResponse(_('Unable find chosen currentQuestion with provided ID.'), status=401, safe=False)
-        currentQuestion = Question.objects.get(pk=data['currentQuestion'])
+        currentQuestion = Question.objects.get(pk=int(data['currentQuestion']))
         # Verify that questions in list exist.
         if len(data['questionList']) == 0:
             return JsonResponse(_('A spot needs at least one question.'), status=401, safe=False)

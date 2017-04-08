@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import time
 
+def getTime():
+    return int(time.time())
 
 class Player(models.Model):
     account = models.ForeignKey(User)
@@ -15,7 +17,7 @@ class Player(models.Model):
     positionz = models.FloatField(default=0.0)
     score = models.IntegerField(default=0)
     questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
-    lastActivity = models.IntegerField(default=time.time)
+    lastActivity = models.IntegerField(default=getTime)
 
     # TODO: Test this method
     def getPosition(self):
@@ -62,7 +64,7 @@ class Spot(models.Model):
     rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
     questionList = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
-    startTime = models.IntegerField(default=time.time)
+    startTime = models.IntegerField(default=getTime())
     delay = models.IntegerField()
 
     # TODO: Test this method too.
