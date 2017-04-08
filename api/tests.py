@@ -275,6 +275,7 @@ class SingleQuestionTest(TestCase):
         self.assertEqual(r.status_code, 404, "[API][SingleQuestion] Wrong status code.")
         self.assertEqual(r.json(), str(_('Question non trouvée.')), "[API][SingleQuestion] Wrong error message.")
 
+
 # TODO: Test at different precision points. (https://en.wikipedia.org/wiki/Decimal_degrees#Precision)
 # For now we'll be tasting human-precision decimal degrees.
 class NeighbouringQuestionsTest(TestCase):
@@ -317,16 +318,16 @@ class NeighbouringQuestionsTest(TestCase):
         spot = self.test_spot
         packed_quests = {
             'questions': [{
-                    'id': spot.pk,
-                    'question': spot.currentQuestion.questionText,
-                    'resp1': spot.currentQuestion.answer1,
-                    'resp2': spot.currentQuestion.answer2,
-                    'resp3': spot.currentQuestion.answer3,
-                    'resp4': spot.currentQuestion.answer4,
-                    'score': spot.currentQuestion.score,
-                    'difficulty': spot.currentQuestion.difficulty,
-                    'position': [spot.centrex, spot.centrey, spot.centrez],
-                }]
+                'id': spot.pk,
+                'question': spot.currentQuestion.questionText,
+                'resp1': spot.currentQuestion.answer1,
+                'resp2': spot.currentQuestion.answer2,
+                'resp3': spot.currentQuestion.answer3,
+                'resp4': spot.currentQuestion.answer4,
+                'score': spot.currentQuestion.score,
+                'difficulty': spot.currentQuestion.difficulty,
+                'position': [spot.centrex, spot.centrey, spot.centrez],
+            }]
         }
         self.maxDiff = None
         self.assertEqual(r.status_code, 200, "[API][NeighbouringQuestions] Wrong status code.")
@@ -344,9 +345,9 @@ class NeighbouringQuestionsTest(TestCase):
         self.assertEqual(r.status_code, 200, "[API][NeighbouringQuestions] Wrong status code.")
         self.assertEqual(r.json(), {'questions': []}, "[API][NeighbouringQuestions] Wrong packed questions.")
 
+
 # This bad boy over here ...
 class AnswerQuestionTest(TestCase):
-
     def setUp(self):
         # TODO: Use mockup to properly test this.
         self.test_question = Question(
@@ -366,55 +367,163 @@ class AnswerQuestionTest(TestCase):
             centrey=1.256950,
             centrez=0,
             currentQuestion=self.test_question,
-            delay=0,
+            delay=500,
             rayon=5,
             questionList='1',
         )
         self.test_spot.save()
+        self.test_zone = ExclusionZone(
+            name='Test Zone',
+            points=json.dumps([
+                [48.2251, -3.8735, 0],
+                [48.1961, -3.8371, 0],
+                [48.2005, -3.9015, 0]
+            ])
+        )
+        self.test_zone.save()
         self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
         self.player = Player(account=self.test_user)
         self.token = token_generator.make_token(self.test_user)
-        self.player.positionx = -2.569110
-        self.player.positiony = 1.256957
         self.player.save()
 
-    def testGoodAnswer(self):
-        r = self.client.get('/api/questions/', data={
+    def testPositionVerification(self):
+        # User is in an exclusion zone.
+        self.player.positionx = 48.215
+        self.player.positiony = -3.8742
+        self.player.save()
+        r = self.client.post('/api/questions/', data=json.dumps({
             'user_id': self.test_user.pk,
             'token': self.token,
-        })
-        data = r.json()
+            'answer': {
+                'qid': self.test_question.pk,
+                'answ_number': 1,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(r.json(), _('Cannot play in an exclusion zone.'),
+                         "[API][AnswerQuestionTest] Wrong error message.")
+        # User far from spot.
+        self.player.positionx = -20.569110
+        self.player.positiony = 15.256957
+        self.player.save()
+        r = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                'qid': self.test_question.pk,
+                'answ_number': 1,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(r.json(), _('Too far to answer this question.'),
+                         "[API][AnswerQuestionTest] Wrong error message.")
+
+    def testGoodAnswer(self):
+        # Test if the answer is taken into account.
+        self.player.positionx = -2.569114
+        self.player.positiony = 1.256958
+        self.player.save()
+        before_score = self.player.score
+        del self.player.score
+        self.test_spot.startTime = int(time.time())
         p = self.client.post('/api/questions/', data=json.dumps({
             'user_id': self.test_user.pk,
             'token': self.token,
             'answer': {
-                        'qid': data['questions'][0]['id'],
-                        'answ_number': 1,
+                'qid': self.test_spot.pk,
+                'answ_number': 1,
             }
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(p.status_code, 200, "[API][AnswerQuestionTest] Wrong status code.")
-        self.assertEqual(p.json(), 'Successfully answered the question.', "[API][AnswerQuestionTest] Wrong information.")
+        self.assertEqual(p.json(), 'Successfully answered the question.',
+                         "[API][AnswerQuestionTest] Wrong information.")
+        # Test if user has the appropriate score afterwards.
+        new_score = self.player.score
+        self.assertEqual(new_score, before_score + self.test_question.score,
+                         "[API][AnswerQuestionTest] Score not added to player.")
+        # Test if the spot has effectively been delayed.
+        del self.test_spot.startTime
+        self.assertAlmostEqual(self.test_spot.startTime, int(time.time()) + self.test_spot.delay, delta=2)
 
     def testBadAnswer(self):
-        r = self.client.get('/api/questions/', data={
-            'user_id': self.test_user.pk,
-            'token': self.token,
-        })
-        data = r.json()
+        self.test_spot.startTime = int(time.time())
+        self.test_spot.save()
+        self.player.positionx = -2.569114
+        self.player.positiony = 1.256958
+        self.player.save()
         p = self.client.post('/api/questions/', data=json.dumps({
             'user_id': self.test_user.pk,
             'token': self.token,
             'answer': {
-                        'qid': data['questions'][0]['id'],
-                        'answ_number': 2,
+                'qid': self.test_spot.pk,
+                'answ_number': 4,
             }
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(p.status_code, 402, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Sorry wrong answer.'),
+                         "[API][AnswerQuestionTest] Wrong information.")
 
+    def testBadInput(self):
+        # Test missing "answer" field.
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 401, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Malformed JSON input.'),
+                         "[API][AnswerQuestionTest] Wrong error message.")
+        # Test missing 'qid" or 'answ_number' field.
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                'answ_number': 4,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 401, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Malformed JSON input.'),
+                         "[API][AnswerQuestionTest] Wrong error message.")
+        # Test unparsable numeric literal.
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                'qid': 'jfjfjfj',
+                'answ_number': 4,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 401, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Unable to parse numeric literals from the request.'),
+                         "[API][AnswerQuestionTest] Wrong information.")
+        # Test bad spot id.
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                'qid': 3938,
+                'answ_number': 4,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 404, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Spot not found.'),
+                         "[API][AnswerQuestionTest] Wrong information.")
+        # Test spot activation time
+        self.test_spot.startTime = int(time.time()) + 1520
+        self.test_spot.save()
+        p = self.client.post('/api/questions/', data=json.dumps({
+            'user_id': self.test_user.pk,
+            'token': self.token,
+            'answer': {
+                'qid': 1,
+                'answ_number': 4,
+            }
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(p.status_code, 404, "[API][AnswerQuestionTest] Wrong status code.")
+        self.assertEqual(p.json(), _('Spot not found.'),
+                         "[API][AnswerQuestionTest] Wrong information.")
 
 
 class PlayerInfoTest(TestCase):
-
     def setUp(self):
         self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
         self.player = Player(account=self.test_user)
@@ -430,6 +539,37 @@ class PlayerInfoTest(TestCase):
         self.assertEqual(r.json(), {'nickname': 'user1', 'score': 0}, "[API][PlayerInfoTest] Wrong information.")
 
 
-
 class PlayerHistoryTest(TestCase):
-    pass
+    def setUp(self):
+        self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user, questionHistory='1')
+        self.player.save()
+        self.test_question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.test_question.save()
+        self.token = token_generator.make_token(self.test_user)
+
+    def testCorrectHistory(self):
+        data = {'history': [
+            {
+                'question': self.test_question.questionText,
+                'score': self.test_question.score,
+                'difficulty': self.test_question.difficulty,
+                'topic': self.test_question.topic,
+            }
+        ]}
+        r = self.client.get('/api/history/', data={
+            'user_id': self.test_user.pk,
+            'token': self.token,
+        })
+        self.assertEqual(r.status_code, 200, "[API][PlayerHistoryTest] Wrong status code.")
+        self.assertEqual(r.json(), data, "[API][PlayerHistoryTest] Wrong data.")

@@ -10,18 +10,18 @@ class Player(models.Model):
     nickname = models.CharField(max_length=20)
     firstName = models.CharField(max_length=20, default='')
     name = models.CharField(max_length=20, default='')
-    positionx = models.FloatField(default=0.0, validators = [MinValueValidator(-90.0), MaxValueValidator(90.0)])
-    positiony = models.FloatField(default=0.0, validators = [MinValueValidator(-180.0), MaxValueValidator(180.0)])
+    positionx = models.FloatField(default=0.0, validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)])
+    positiony = models.FloatField(default=0.0, validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
     positionz = models.FloatField(default=0.0)
     score = models.IntegerField(default=0)
     questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
     lastActivity = models.IntegerField(default=time.time)
 
-    #TODO: Test this method
+    # TODO: Test this method
     def getPosition(self):
         return (self.positionx, self.positiony, self.positionz)
 
-    #TODO: Test this method.
+    # TODO: Test this method.
     def addQuestionToHistory(self, qid):
         qids = []
         if len(self.questionHistory) > 0:
@@ -34,10 +34,6 @@ class Player(models.Model):
             qids.pop(0)
         qids.append(str(qid))
         self.questionHistory = ','.join(qids)
-
-    # TODO: Test this method
-    def __str__(self):
-        return self.nickname
 
 
 class Question(models.Model):
@@ -58,14 +54,10 @@ class Question(models.Model):
     topic = models.CharField(max_length=20)  # theme de la question
     score = models.IntegerField()  # points rapportes
 
-    # TODO: Test this method
-    def __str__(self):
-        return self.questionText
-
 
 class Spot(models.Model):
-    centrex = models.FloatField(validators = [MinValueValidator(-90.0), MaxValueValidator(90.0)])
-    centrey = models.FloatField(validators = [MinValueValidator(-180.0), MaxValueValidator(180.0)])
+    centrex = models.FloatField(validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)])
+    centrey = models.FloatField(validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
     centrez = models.IntegerField(default=0)
     rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
@@ -88,7 +80,3 @@ class Spot(models.Model):
 class ExclusionZone(models.Model):
     name = models.CharField(max_length=20)
     points = models.TextField()
-
-    #TODO: Test this method
-    def __str__(self):
-        return self.name

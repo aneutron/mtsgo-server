@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^questions/(?P<qid>[0-9]+)/$', try_decode_json(token_required(views.QuestionsView.as_view(), True)),name='admin_question_by_id'),
     url(r'^carte/$', try_decode_json(token_required(views.CarteView.as_view(), True)), name="admin_carte"),
     url(r'^position/$', try_decode_json(token_required(views.PlayerPositionView.as_view(), True)), name='admin_position'),
-    url(r'^position/(?P<player_id>[0-9]+)/$', try_decode_json(token_required(views.PlayerPositionView.as_view(), True)),name='question_by_id'),
-    url(r'^state/', try_decode_json(token_required(views.ServerStateView.as_view(), True)), name='server_state'),
+    url(r'^position/(?P<player_id>[0-9]+)/$', try_decode_json(token_required(views.PlayerPositionView.as_view(), True)),name='admin_position_by_id'),
+    url(r'^state/', try_decode_json(token_required(views.ServerStateView.as_view(), True)), name='admin_server_state'),
+    url(r'^stats/', try_decode_json(token_required(views.StatsView.as_view())), name='admin_server_stats')
 ]

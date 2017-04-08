@@ -149,14 +149,14 @@ class Questions(View):
         """
         # First check the parameters are sent correctly
         if 'answer' not in req.json_data:
-            return JsonResponse('Malformed JSON input.', status=401, safe=False)
+            return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
         if ('qid' not in req.json_data['answer']) or ('answ_number' not in req.json_data['answer']):
-            return JsonResponse('Malformed JSON input.', status=401, safe=False)
+            return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
         try:
             spotid = int(req.json_data['answer']['qid'])
             answ_id = int(req.json_data['answer']['answ_number'])
         except ValueError:
-            return JsonResponse('Malformed JSON input.', status=401, safe=False)
+            return JsonResponse(_('Unable to parse numeric literals from the request.'), status=401, safe=False)
         player = Player.objects.get(account=req.user)
         # Check that user is not in an exclusion zone.
         # FIXME: Use django in-memory cache, it will accelerate this a LOT. Especially zone unloading.
@@ -164,21 +164,22 @@ class Questions(View):
         for z in zones:
             sommets = json.loads(z.points)
             if geo_point_in_polygon(player.getPosition(), sommets):
-                return JsonResponse('Cannot play in an exclusion zone.', status=403, safe=False)
+                return JsonResponse(_('Cannot play in an exclusion zone.'), status=401, safe=False)
         # Check if spot exists
         # FIXME: Use heuristics to keep a low but frequented cache of spots. Maybe cache all until a threshold.
-        spot = Spot.objects.get(pk=spotid)
-        if not spot:
-            return JsonResponse('Spot not found.', status=404, safe=False)
+        try:
+            spot = Spot.objects.get(pk=spotid)
+        except Spot.DoesNotExist:
+            return JsonResponse(_('Spot not found.'), status=404, safe=False)
         # Check if spot is active
         if spot.startTime > time.time():
-            return JsonResponse('Spot not found.', status=404, safe=False)
+            return JsonResponse(_('Spot not found.'), status=404, safe=False)
         # Check if user is within answering distance
         if geo_distance_between_points(spot.getPosition(), player.getPosition()) > spot.rayon:
-            return JsonResponse('Too far to answer this question.', status=401, safe=False)
+            return JsonResponse(_('Too far to answer this question.'), status=401, safe=False)
         # Finally check is the answer is correct.
         if spot.currentQuestion.rightAnswer != answ_id:
-            return JsonResponse('Sorry wrong answer.', status=402, safe=False)
+            return JsonResponse(_('Sorry wrong answer.'), status=402, safe=False)
         # If the user answered correctly, add score points, and add question to history.
         player.score = player.score + spot.currentQuestion.score
         player.addQuestionToHistory(spot.currentQuestion.pk)
@@ -196,15 +197,14 @@ class Questions(View):
         # In case the question reference is wrong.
         if not question:
             logger.error("[INTERNAL ERR] Bad question reference on spot " + str(spotid) + ": " + str(questionId))
-            return JsonResponse('', status=500, safe=False)
+            return JsonResponse(_("An error internal error occurred during the operation."), status=500, safe=False)
         spot.currentQuestion = question
         spot.startTime = int(time.time()) + spot.delay
         try:
             spot.save()
         except Exception as e:
-            logger.error("[INTERNAL ERR] Unable to update spot " + str(spotid) + ": " + str(questionId))
             handle_exception(e, req)
-            return JsonResponse('Unable to update spot.', status=500, safe=False)
+            return JsonResponse(_("An error internal error occurred during the operation."), status=500, safe=False)
         # If we're here, then everything (hopefully) is checked. Let's congratulate him.
         return JsonResponse('Successfully answered the question.', status=200, safe=False)
 
