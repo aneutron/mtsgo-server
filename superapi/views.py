@@ -212,16 +212,25 @@ class QuestionsView(View):
                        'topic']
         if ('question' not in req.json_data) or (type(req.json_data['question']) is not type({})):
             return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        data = req.json_data['question']
         for k in needed_keys:
-            if k not in req.json_data.keys():
+            if k not in data.keys():
                 return JsonResponse(_('Invalid JSON input.'), status=401, safe=False)
+        try:
+            int(data['difficulty'])
+            int(data['score'])
+            int(data['rightAnswer'])
+        except ValueError:
+            return JsonResponse(_('Unable to parse correct numeric literals.'), status=401, safe=False)
+        try:
+            Question.objects.get(pk=qid)
+        except Question.DoesNotExist:
+            return JsonResponse(_('Question with ID='+str(qid)+' not found.'), status=404, safe=False)
         try:
             # TODO: Rewrite the previously coded APIs to support this.
             # http://stackoverflow.com/questions/5503925/how-do-i-use-a-dictionary-to-update-fields-in-django-models
-            Question.objects.filter(pk=qid).update(**req['question'])
+            Question.objects.filter(pk=qid).update(**data)
             return JsonResponse(_('Question updated successfully.'), status=200, safe=False)
-        except Question.DoesNotExist:
-            return JsonResponse(_('Question with ID='+str(qid)+' not found.'), status=404, safe=False)
         except ValidationError as e:
             return JsonResponse(_('Question parameters are not correctly set: '+e.message()), status=401, safe=False)
         except Exception:
@@ -325,6 +334,6 @@ class StatsView(View):
         data = {
             'nbrQ': Question.objects.count(),
             'nbrJ': Player.objects.count(),
-            'nbrJConnected': Player.objects.filter(lastActivity__gte=time.time()-consideredActive)
+            'nbrJConnected': Player.objects.filter(lastActivity__gte=time.time()-consideredActive).count()
         }
         return JsonResponse(data, status=200)

@@ -287,6 +287,13 @@ class SpotDeleteTest(TestCase):
         self.assertEqual(r.status_code, 200, "[SUPERAPI][DeleteSpotTest] Wrong status code")
         self.assertEqual(r.json(), 'Spot successfully deleted.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
 
+        r = self.client.delete('/superapi/spots/15/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 404, "[SUPERAPI][DeleteSpotTest] Wrong status code")
+        self.assertEqual(r.json(), 'Spot with ID=' + '15' + ' not found.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
+
 
 class QuestionViewTest(TestCase):
 
@@ -365,4 +372,210 @@ class QuestionAddTest(TestCase):
             'token': self.token,
             'question': self.test_question
         }), content_type=JSON_CONTENT_TYPE)
-        self.assertEqual(r.status_code, 200, "[SUPERAPI][SpotAddTest] Wrong status code")
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][QuestionAddTest] Wrong status code")
+
+    def testAddEmptyQuestion(self):
+        r = self.client.post('/superapi/questions/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'ques': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionAddTest] Wrong status code")
+        self.assertEqual(r.json(), 'Invalid JSON input.', "[SUPERAPI][QuestionAddTest] Wrong reason")
+
+    def testAddWrongEntryQuestion(self):
+        self.test_question.pop('topic')
+        r = self.client.post('/superapi/questions/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionAddTest] Wrong status code")
+        self.assertEqual(r.json(), 'Invalid JSON input.', "[SUPERAPI][QuestionAddTest] Wrong reason")
+
+    def testAddWrongQuestion(self):
+        self.test_question['score'] = 'hundred'
+        r = self.client.post('/superapi/questions/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionAddTest] Wrong status code")
+        self.assertEqual(r.json(), 'Unable to parse correct numeric literals.', "[SUPERAPI][QuestionAddTest] Wrong reason")
+
+
+class QuestionUpdateTest(TestCase):
+
+    def setUp(self):
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.test_question = {
+            "questionText": 'Would a woodchuck ... ?',
+            "answer1": 'Yes',
+            "answer2": 'No',
+            "answer3": 'I said Yes',
+            "answer4": "YOU'RE WRONG",
+            "difficulty": 100,
+            "score": 100,
+            "topic": 'Memetics',
+            "rightAnswer": 1
+        }
+        self.question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.question.save()
+        self.token = token_generator.make_token(self.test_admin)
+    def testUpdateQuestion(self):
+        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
+        self.assertEqual(r.json(), 'Question updated successfully.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+    def testUpdateInexistentQuestion(self):
+        r = self.client.post('/superapi/questions/9/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 404, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
+        self.assertEqual(r.json(), 'Question with ID='+'9'+' not found.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+    def testUpdateWrongQuestion(self):
+        self.test_question['difficulty']='hard'
+        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
+        self.assertEqual(r.json(), 'Unable to parse correct numeric literals.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+    def testUpdateWrongEntryQuestion(self):
+        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'ques': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
+        self.assertEqual(r.json(), 'Invalid JSON input.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+    def testUpdateWrongKeysQuestion(self):
+        self.test_question.pop('topic')
+        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+            'question': self.test_question
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
+        self.assertEqual(r.json(), 'Invalid JSON input.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+
+class ServerStateViewTest(TestCase):
+
+    def setUp(self):
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.token = token_generator.make_token(self.test_admin)
+
+    def testGetServerState(self):
+        r = self.client.get('/superapi/state/', data={
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+        }, content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][ServerStateViewTest] Wrong status code")
+
+
+class PlayerPositionViewTest(TestCase):
+
+    def setUp(self):
+        self.test_user1 = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user1)
+        self.player.positionx = -2.569110
+        self.player.positiony = 1.256957
+        self.player.save()
+        self.playerInfo1 = {'id': 1, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
+
+        self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')
+        self.player = Player(account=self.test_user2)
+        self.player.positionx = -3.569110
+        self.player.positiony = 2.256957
+        self.player.save()
+        self.playerInfo2 = {'id': 2, 'x': -3.569110, 'y': 2.256957, 'z': 0.0}
+
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.token = token_generator.make_token(self.test_admin)
+
+    def testGetAllPosition(self):
+        r = self.client.get('/superapi/position/', data={
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+        }, content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
+        self.assertEqual(r.json(), [self.playerInfo1,self.playerInfo2], "[SUPERAPI][PlayerPositionViewTest] Wrong information")
+
+    def testGetOnePosition(self):
+        r = self.client.get('/superapi/position/1/', data={
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+        }, content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
+        self.assertEqual(r.json(), self.playerInfo1, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
+
+    def testGetInexistentPosition(self):
+        r = self.client.get('/superapi/position/15/', data={
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+        }, content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 404, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
+        self.assertEqual(r.json(), 'Unable to find player with ID='+'15'+'.', "[SUPERAPI][PlayerPositionViewTest] Wrong reason")
+
+
+class StatsViewTest(TestCase):
+
+    def setUp(self):
+        self.test_user1 = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
+        self.player = Player(account=self.test_user1)
+        self.player.positionx = -2.569110
+        self.player.positiony = 1.256957
+        self.player.lastActivity = getTime()-1000
+        self.player.save()
+
+        self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')
+        self.player = Player(account=self.test_user2)
+        self.player.positionx = -3.569110
+        self.player.positiony = 2.256957
+        self.player.save()
+
+        self.question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.question.save()
+        self.stats = {'nbrQ':1, 'nbrJ':2, 'nbrJConnected':1}
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.token = token_generator.make_token(self.test_admin)
+
+    def testGetStats(self):
+        r = self.client.get('/superapi/stats/', data={
+            'user_id': self.test_admin.pk,
+            'token': self.token,
+        }, content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
+        self.assertEqual(r.json(), self.stats, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
+
