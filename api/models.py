@@ -1,21 +1,41 @@
 from django.db import models
-from django.core.validators import validate_comma_separated_integer_list
+from django.core.validators import validate_comma_separated_integer_list, MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from django.conf import settings
+import time
 
+def getTime():
+    return int(time.time())
 
 class Player(models.Model):
     account = models.ForeignKey(User)
     nickname = models.CharField(max_length=20)
     firstName = models.CharField(max_length=20, default='')
     name = models.CharField(max_length=20, default='')
-    positionx = models.FloatField(default=0.0)
-    positiony = models.FloatField(default=0.0)
+    positionx = models.FloatField(default=0.0, validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)])
+    positiony = models.FloatField(default=0.0, validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
     positionz = models.FloatField(default=0.0)
     score = models.IntegerField(default=0)
-    questionHistoric = models.CharField(max_length=55, validators=[validate_comma_separated_integer_list], default='[]')
+    questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
+    lastActivity = models.IntegerField(default=getTime)
 
-    def __str__(self):
-        return self.nickname
+    # TODO: Test this method
+    def getPosition(self):
+        return (self.positionx, self.positiony, self.positionz)
+
+    # TODO: Test this method.
+    def addQuestionToHistory(self, qid):
+        qids = []
+        if len(self.questionHistory) > 0:
+            try:
+                qids = self.questionHistory.split(',')
+            except ValueError as e:
+                # This should not happen as entries are validated before insertion by Django.
+                pass
+        if len(qids) >= getattr(settings, 'MTSGO_PLAYER_HISTORY_LIMIT', 10):
+            qids.pop(0)
+        qids.append(str(qid))
+        self.questionHistory = ','.join(qids)
 
 
 class Question(models.Model):
@@ -26,36 +46,39 @@ class Question(models.Model):
     answer3 = models.CharField(max_length=100)
     answer4 = models.CharField(max_length=100)
     CHOICES = (
-        ('1', answer1),
-        ('2', answer2),
-        ('3', answer3),
-        ('4', answer4),
+        (1, answer1),
+        (2, answer2),
+        (3, answer3),
+        (4, answer4),
     )
-    rightAnswer = models.CharField(max_length=20, choices=CHOICES)
+    rightAnswer = models.IntegerField(choices=CHOICES)
     difficulty = models.IntegerField()
     topic = models.CharField(max_length=20)  # theme de la question
     score = models.IntegerField()  # points rapportes
 
-    def __str__(self):
-        return self.questionText
-
 
 class Spot(models.Model):
-    centrex = models.FloatField()
-    centrey = models.FloatField()
-    centrez = models.FloatField(default=0)
-    rayon = models.IntegerField()
+    centrex = models.FloatField(validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)])
+    centrey = models.FloatField(validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
+    centrez = models.IntegerField(default=0)
+    rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
-    questionList = models.CharField(max_length=20, validators=[validate_comma_separated_integer_list])
-    startTime = models.IntegerField()
+    questionList = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
+    startTime = models.IntegerField(default=getTime())
+    delay = models.IntegerField()
 
-    def __str__(self):
-        return 'x=' + str(self.centrex) + ' y=' + str(self.centrey) + ' z=' + str(self.centrez)
+    # TODO: Test this method too.
+    def getPosition(self):
+        return [self.centrex, self.centrey, self.centrez]
+
+    def loadQuestions(self):
+        self.questions = []
+        if len(self.questionList) == 0:
+            return
+        questions_ids = [int(y) for y in self.questionList.split(',')]
+        self.questions = Question.objects.filter(id__in=questions_ids)
 
 
-class Zone(models.Model):
+class ExclusionZone(models.Model):
     name = models.CharField(max_length=20)
     points = models.TextField()
-
-    def __str__(self):
-        return self.name

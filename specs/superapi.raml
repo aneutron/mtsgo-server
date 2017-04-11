@@ -1,0 +1,430 @@
+#%RAML 1.0
+version: 1.0 alpha 1
+title: MTSGO Supervision
+mediaType: application/json
+###########################################
+#		 	Type Definitions			  #
+###########################################
+types:
+  Token:
+    type: object
+    properties:
+      token:
+        type: string
+        description: Jeton d'authentification de l'administrateur.
+      user_id:
+        type: integer
+        description: ID de l'administrateur.
+  Question:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Identifiant unique de la question
+      question:
+        type: string
+        description: Texte de la question
+      rep1:
+        type: string
+        description: Réponse 1
+      rep2:
+        type: string
+        description: Réponse 2
+      rep3:
+        type: string
+        description: Réponse 3
+      rep4:
+        type: string
+        description: Réponse 4
+      score:
+        type: integer
+        description: Score attribué si le joueur répond correctement.
+      difficulty:
+        type: integer
+        description: Difficulté de la question.
+  QuestionList:
+    type: object
+    properties:
+      questions:
+        type: Question[]
+  Spot:
+    type: object
+    properties:
+      centrex:
+        type: number
+        description: Latitude du spot.
+      centrey:
+        type: number
+        description: Longitude du spot.
+      centrez:
+        type: integer
+        description: Etage du spot.
+      rayon:
+        type: integer
+        description: Rayon de validité du spot.
+      currentQuestion?:
+        type: integer
+        description: Question dans le spot.
+      questionList:
+        type: integer []
+        description: Liste des IDs des questions que le spot peut instancier.
+      startTime:
+        type: integer
+        description: Temps à partir duquel le spot est actif.
+      delay:
+        type: integer
+        description: Temps de _recoil_ du spot.
+  SpotWithQuestions:
+    type: object
+    properties:
+      centrex:
+        type: number
+        description: Latitude du spot.
+      centrey:
+        type: number
+        description: Longitude du spot.
+      centrez:
+        type: integer
+        description: Etage du spot.
+      rayon:
+        type: integer
+        description: Rayon de validité du spot.
+      currentQuestion:
+        type: Question
+        description: Question dans le spot.
+      questionList:
+        type: Question[]
+        description: Liste des questions que le spot peut instancier.
+      startTime:
+        type: integer
+        description: Temps à partir duquel le spot est actif.
+      delay:
+        type: integer
+        description: Temps de _recoil_ du spot.
+  SpotList:
+    type: object
+    properties:
+      spots:
+        type: Spot[]
+  SpotListWithQuestions:
+    type: object
+    properties:
+      spots:
+        type: SpotWithQuestions[]
+  ExclusionZoneVertex:
+    type: object
+    description: Sommet d'un polygone.
+    properties:
+      x:
+        type: number
+      y:
+        type: number
+      z:
+        type: integer
+  ExclusionZone:
+    type: object
+    properties:
+      name:
+        type: string
+        description: Nom de la zone d'exclusion.
+      points:
+        type: ExclusionZoneVertex []
+        description: Sommets du polygone qui définit la zone d'exclusion.
+  Stats:
+    type: object
+    description: Objet englobant les différentes statistiques.
+    properties:
+      nbrQ:
+        type: integer
+        description: Nombre de questions.
+      nbrJ:
+        type: integer
+        description: Nombre de joueurs inscrits.
+      nbrJConnected:
+        type: integer
+        description: Nombre de joueurs actifs.
+  PositionJoueur:
+    type: object
+    properties:
+      id: integer
+      x: integer
+      y: integer
+      z: integer
+  EtatServeur:
+    type: object
+    properties:
+      cpuPercent: integer
+      ramPercent: integer
+      diskTotal: integer
+      diskUsed: integer
+
+#############################################
+#			API Definitions					#
+#############################################
+/auth/:
+    description: Système d'authentification.
+    post:
+      queryParameters:
+        username:
+          type: string
+          description: Nom de d'utilisateur de l'administrateur.
+        password:
+          type: string
+          description: Mot de passe de l'administrateur __en clair__.
+      responses:
+        200:
+          body:
+            application/json:
+              type: Token
+        403:
+          description: Connexion impossible.
+
+/spots:
+  description: Gestion des spots dans le jeu.
+  /:
+    get:
+      description: Obtenir tout les spots du jeu.
+      queryParameters:
+        token:
+          type: string
+          description: Le jeton d'authentification.
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+      responses:
+        200:
+          description: Si l'authentification est correcte, la liste des spots dans le jeu.
+          body:
+              type: SpotListWithQuestions
+        403:
+          description: Authentification impossible.
+    post:
+      description: Insérer un spot.
+      queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          description: ID de l'administrateur
+          type: integer
+        spot:
+          type: Spot
+          description: Spot à insérer.
+      responses:
+        200:
+          description: Dans le cas où le spot a été inséré avec succès.
+        403:
+          description: Dans le cas où l'authentification a échoué.
+        401:
+          description: Dans le cas où les paramètres ne sont pas corrects.
+  /{spot_id}/:
+    get:
+      queryParameters:
+        token:
+          type: string
+          description: Le jeton d'authentification.
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+      responses:
+        200:
+          description: Si l'authentification est correcte, et que le spot exists, le spot demandé.
+          body:
+            application/json:
+                type: SpotWithQuestions
+        404:
+          description: Spot non retrouvé.
+        403:
+          description: Authentification impossible.
+    delete:
+      description: Supprime le spot concerné.
+      queryParameters:
+        token:
+          type: string
+          description: Jeton d'authentification.
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+      responses:
+        200:
+          description: La suppression a été un succès.
+        404:
+          description: Impossible de trouver le spot avec cet ID.
+        403:
+          description: Authentification impossible.
+
+/questions:
+  description: Obtention, insértion et modification des questions dans le jeu.
+  get:
+    description: Retourne toutes les questions dans la base de données.
+    queryParameters:
+      token:
+        description: Le jeton d'authentification.
+        type: string
+      user_id:
+        type: integer
+        description: ID de l'administrateur.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Question[]
+  post:
+    description: Positionne une question sur le jeu. __L'ID doit être vide pour cette requête__
+    queryParameters:
+      token:
+        description: Le jeton d'authentification.
+        type: string
+      question:
+        type: Question
+        description: La question à insérer.
+    responses:
+      200:
+        description: Code retourné si aucune erreur n'a survenue lors de l'ajout de la question.
+      403:
+        description: Authentification impossible.
+      401:
+        description: Code retourné si la question soumise contient des erreurs.
+        body:
+          description: Erreur rencontrée
+  /{question_id}/:
+    get:
+      description: Retourne les détails d'une question si son ID existe
+      queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+      responses:
+        200:
+          description: Dans le cas où l'ID existe, les données de la question.
+          body:
+            application/json:
+              type: Question
+        403:
+          description: Authentification impossible.
+        404:
+          description: Dans le cas ou l'ID n'est associé à aucune question, un code 404 est retourné.
+    post:
+      description: Met à jour une question spécifique.
+      queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          description: ID de l'administrateur.
+          type: integer
+        question:
+          description: La question avec ses données mises à jour.
+          type: Question
+      responses:
+        200:
+          description: Dans le cas où la mise à jour a été faite avec succès.
+          body:
+            application/json:
+              type: Question
+        401:
+          description: La question soumise contient des erreurs.
+          body:
+            application/json:
+              type: string
+              description: Message d'erreur.
+        403:
+          description: Authentification impossible
+
+/carte:
+  description: Obtention de la dernière version de la carte.
+  get:
+    description: Lien vers le fichier de la carte.
+    queryParameters:
+      token:
+        description: Le jeton d'authentification.
+        type: string
+      user_id:
+        type: integer
+        description: ID de l'administrateur
+    responses:
+      200:
+        body:
+          application/text:
+            type: string
+            description: Le lien vers la carte.
+      403:
+          description: Authentification impossible
+
+/stats:
+  description: Obtention des statistiques sur le serveur _(Joueurs, Questions, etc.)_
+  get:
+    description: Retourne les statistiques actuels.
+    queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          type: integer
+          description: ID de l'administrateur.
+    responses:
+      200:
+        body:
+          application/json:
+            type: Stats
+
+/state/:
+  description: Information à propos des ressources du serveur.
+  get:
+    description: Obtenir les informations à propos des ressources du serveur.
+    queryParameters:
+      token:
+        type: string
+        description: Jeton d'authentification.
+      user_id:
+        type: integer
+        description: ID de l'administrateur.
+    responses:
+      200:
+        body:
+          application/json:
+            type: EtatServeur
+      403:
+        description: Authentification impossible.
+
+/position:
+  description: __Uniquement disponible dans la version de développement pour faciliter les test__
+  get:
+    description: Liste la position de tout les joueurs
+    queryParameters:
+      token:
+        description: Le jeton d'authentification.
+        type: string
+      user_id:
+        type: integer
+        description: ID de l'administrateur
+    responses:
+      200:
+        body:
+          application/json:
+            type: PositionJoueur[]
+      403:
+          description: Authentification impossible
+  /{id_joueur}:
+    get:
+      description: Obtention de la position d'un joueur spécifique
+      queryParameters:
+        token:
+          description: Le jeton d'authentification.
+          type: string
+        user_id:
+          type: integer
+          description: ID de l'administrateur
+      responses:
+        200:
+          description: Si le joueur avec l'id __id_joueur__ a été trouvé.
+          body:
+            application/json:
+              type: PositionJoueur
+        403:
+          description: Authentification impossible
+        404:
+          description: Si le joueur avec l'id __id_joueur__ n'a pas été trouvé.

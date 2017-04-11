@@ -1,0 +1,31 @@
+#   A basic travis.yml boilerplate for Django projects
+#   https://gist.github.com/ndarville/3625246
+
+language: python
+
+python:
+  - 3.5
+  - 3.6
+
+git:
+  depth: 3
+
+before_install:
+  - export DJANGO_SETTINGS_MODULE=mtsgo.settings
+  - export PYTHONPATH=$HOME/builds/aneutron/mtsgo-server-failsafe
+
+install:
+  - pip install -r requirements.txt --quiet
+  - pip install coverage --quiet
+  - pip install codecov --quiet
+
+before_script:
+  - python manage.py makemigrations
+  - python manage.py migrate
+
+script:
+  - python manage.py check
+  - coverage run --source='.' --omit='manage.py' manage.py test
+
+after_script:
+  - codecov --token=b5e3bd2d-2bde-475a-8693-86d45f30b6b8
