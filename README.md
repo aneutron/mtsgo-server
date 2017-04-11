@@ -1,6 +1,6 @@
 # MTSGO Server
-![Build Status](https://api.travis-ci.com/aneutron/mtsgo-server.svg?token=wgWk1dajYyv8wpbcqiyk&branch=master)
-![Code Coverage](https://codecov.io/github/aneutron/mtsgo-server/coverage.svg?branch=master&token=DCy53fzIpa)
+![Build Status](https://travis-ci.org/aneutron/mtsgo-server.svg?branch=master)
+![Code Coverage](https://codecov.io/github/aneutron/mtsgo-server/coverage.svg?branch=master)
 
 ## Présentation
 
