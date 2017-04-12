@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from django.http import HttpResponseForbidden
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt

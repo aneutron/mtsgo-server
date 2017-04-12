@@ -1,11 +1,11 @@
-import math
-
+# -*- coding: utf8 -*-
 from django.core.exceptions import ValidationError
 from django.views import View
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from mtsgo.tokenapi.views import token_new
 from api.models import *
+from math import isfinite
 import psutil, json
 
 
@@ -136,7 +136,7 @@ class SpotsView(View):
         if type(data['questionList']) != type([]):
             return JsonResponse(_('Unable to parse correct question list.'), status=401, safe=False)
         # Validate numeric values.
-        if (not math.isfinite(x)) or (not math.isfinite(y)) or (not math.isfinite(z)):
+        if (not isfinite(x)) or (not isfinite(y)) or (not isfinite(z)):
             return JsonResponse(_('Spot coordinates can\'t be infinity or NaN.'), status=401, safe=False)
         if (not -180 <= y <= 180) or (not -90 <= x <= 90):
             return JsonResponse(_('Latitude and Longitude are out of range.'), status=401, safe=False)

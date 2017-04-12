@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from django.core.exceptions import ValidationError
 from django.core import serializers
 from django.core.validators import EmailValidator
@@ -9,7 +10,8 @@ from mtsgo.tokenapi.views import token_new
 from mtsgo.geocalc import *
 from mtsgo.helpers import handle_exception
 from api.models import *
-import math, json, random, logging
+from math import isfinite
+import json, random, logging
 
 # One logger is enough for the whole project.
 logger = logging.getLogger('mtsgo')
@@ -76,7 +78,7 @@ class UpdatePosition(View):
         except ValueError as e1:
             handle_exception(e1, request=req)
             return JsonResponse(_('Malformed coordinates. Unable to parse to float.'), status=401, safe=False)
-        if (not math.isfinite(x)) or (not math.isfinite(y)) or (not math.isfinite(z)):
+        if (not isfinite(x)) or (not isfinite(y)) or (not isfinite(z)):
             return JsonResponse(_('Your coordinates can\'t be infinity or NaN, idiot. TG.'), status=401, safe=False)
         if (not -180 <= y <= 180) or (not -90 <= x <= 90):
             return JsonResponse(_('Coordinates out of range.'), status=401, safe=False)

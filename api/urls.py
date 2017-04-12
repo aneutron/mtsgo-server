@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from django.conf.urls import url
 from mtsgo.tokenapi.decorators import token_required
 from mtsgo.decorators import try_decode_json

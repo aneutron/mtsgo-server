@@ -7,11 +7,17 @@ python:
   - 3.5
   - 3.6
 
+services:
+  - mysql
+  - postgresql
+
 git:
   depth: 3
 
 env:
-  - DJANGO_SETTINGS_MODULE=mtsgo.settings 
+  - DJANGO_SETTINGS_MODULE=mtsgo.settings
+  - DJANGO_SETTINGS_MODULE=mtsgo.testing.mysql_settings
+  - DJANGO_SETTINGS_MODULE=mtsgo.testing.postgres_settings
 
 install:
   - pip install -r requirements.txt --quiet
@@ -19,6 +25,8 @@ install:
   - pip install codecov --quiet
 
 before_script:
+  - mysql -e 'CREATE DATABASE mtsgo_test;'
+  - psql -c 'create database mtsgo_test;' -U postgres
   - python manage.py makemigrations
   - python manage.py migrate
 

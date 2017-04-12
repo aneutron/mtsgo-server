@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from django.db import models
 from django.core.validators import validate_comma_separated_integer_list, MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User

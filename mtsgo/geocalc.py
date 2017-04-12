@@ -1,13 +1,9 @@
+# -*- coding: utf8 -*-
 from math import radians, cos, sin, asin, sqrt
-from typing import List, Tuple
 import numpy as np
 import matplotlib.path as mplPath
 
-Point = Tuple[float, float, float]
-Polygon = List[Point]
-
-
-def geo_distance_between_points(p1: Point, p2: Point) -> float:
+def geo_distance_between_points(p1, p2):
     """
      Calcule la distance entre deux points de la terre (spécifiés en degrés décimaux)[#]_
      **Note: ** Shamelessly stolen from http://stackoverflow.com/a/4913653
@@ -27,7 +23,7 @@ def geo_distance_between_points(p1: Point, p2: Point) -> float:
     return c * r
 
 
-def geo_point_in_polygon(point: Point, poly: Polygon) -> bool:
+def geo_point_in_polygon(point, poly):
     """
     Vérifie si un point est dans un polygone.
     **Note :** On travaille dans l'approximation du Campus. Hors de cette approximation, la validité de cet

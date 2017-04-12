@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from unittest import TestCase
 from mtsgo.geocalc import *
 

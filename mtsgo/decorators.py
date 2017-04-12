@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 import json
 from functools import wraps
 from json import JSONDecodeError

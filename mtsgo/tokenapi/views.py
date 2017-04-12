@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden

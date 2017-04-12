@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """
 WSGI config for mtsgo project.
 

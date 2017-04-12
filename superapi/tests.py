@@ -1,11 +1,9 @@
+# -*- coding: utf8 -*-
 from django.test import TestCase
-from django.utils.translation import ugettext_lazy as _
-from django.core.validators import EmailValidator
-from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
 from api.models import *
 from tokenapi.tokens import token_generator
-import json, math
+from numpy import inf as np_inf
+import json
 
 JSON_CONTENT_TYPE = 'application/json'
 # Create your tests here.
@@ -177,7 +175,7 @@ class SpotAddTest(TestCase):
         self.assertEqual(r.status_code, 401, "[SUPERAPI][SpotAddTest] Wrong status code")
         self.assertEqual(r.json(), 'Latitude and Longitude are out of range.', "[SUPERAPI][SpotAddTest] Wrong reason")
 
-        self.test_spot['centrex'] = math.inf
+        self.test_spot['centrex'] = np_inf
         r = self.client.post('/superapi/spots/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
