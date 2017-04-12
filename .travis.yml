@@ -10,9 +10,8 @@ python:
 git:
   depth: 3
 
-before_install:
-  - export DJANGO_SETTINGS_MODULE=mtsgo.settings
-  - export PYTHONPATH=$HOME/builds/aneutron/mtsgo-server-failsafe
+env:
+  - DJANGO_SETTINGS_MODULE=mtsgo.settings 
 
 install:
   - pip install -r requirements.txt --quiet
