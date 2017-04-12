@@ -290,7 +290,7 @@ class SpotDeleteTest(TestCase):
             'token': self.token
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 404, "[SUPERAPI][DeleteSpotTest] Wrong status code")
-        self.assertEqual(r.json(), 'Spot with ID=' + '15' + ' not found.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
+        self.assertEqual(r.json(), 'Spot with ID=' + '156985' + ' not found.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
 
 
 class QuestionViewTest(TestCase):
@@ -447,7 +447,7 @@ class QuestionUpdateTest(TestCase):
             'question': self.test_question
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 404, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
-        self.assertEqual(r.json(), 'Question with ID='+'9'+' not found.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+        self.assertEqual(r.json(), 'Question with ID='+'987965'+' not found.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
 
     def testUpdateWrongQuestion(self):
         self.test_question['difficulty']='hard'
@@ -522,7 +522,7 @@ class PlayerPositionViewTest(TestCase):
         self.assertEqual(r.json(), [self.playerInfo1,self.playerInfo2], "[SUPERAPI][PlayerPositionViewTest] Wrong information")
 
     def testGetOnePosition(self):
-        r = self.client.get('/superapi/position/1/', data={
+        r = self.client.get('/superapi/position/'+str(self.player.pk)+'/', data={
             'user_id': self.test_admin.pk,
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
@@ -530,12 +530,12 @@ class PlayerPositionViewTest(TestCase):
         self.assertEqual(r.json(), self.playerInfo1, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
 
     def testGetInexistentPosition(self):
-        r = self.client.get('/superapi/position/15/', data={
+        r = self.client.get('/superapi/position/158959/', data={
             'user_id': self.test_admin.pk,
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 404, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
-        self.assertEqual(r.json(), 'Unable to find player with ID='+'15'+'.', "[SUPERAPI][PlayerPositionViewTest] Wrong reason")
+        self.assertEqual(r.json(), 'Unable to find player with ID='+'158959'+'.', "[SUPERAPI][PlayerPositionViewTest] Wrong reason")
 
 
 class StatsViewTest(TestCase):

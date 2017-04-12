@@ -320,7 +320,7 @@ class PlayerPositionView(View):
         data = []
         for player in players:
             data.append({
-                'id': player.account.id,
+                'id': player.account.pk,
                 'x': player.positionx,
                 'y': player.positiony,
                 'z': player.positionz
