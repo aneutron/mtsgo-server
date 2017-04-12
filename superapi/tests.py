@@ -62,7 +62,7 @@ class SpotTest(TestCase):
             currentQuestion=self.test_question,
             delay=0,
             rayon=5,
-            questionList='1',
+            questionList=str(self.test_question.pk),
         )
         self.test_spot.save()
         self.token = token_generator.make_token(self.test_admin)
@@ -85,7 +85,7 @@ class SpotTest(TestCase):
                 'topic': self.test_question.topic
             },
             "questions": [{
-                'id': self.test_question.id,
+                'id': self.test_question.pk,
                 'question': self.test_question.questionText,
                 'answer1': self.test_question.answer1,
                 'answer2': self.test_question.answer2,
@@ -142,7 +142,7 @@ class SpotAddTest(TestCase):
             "centrex": -2.569111,
             "centrey": 1.256950,
             "centrez": 0,
-            "currentQuestion": 1,
+            "currentQuestion": self.test_question.pk,
             "delay": 0,
             "rayon": 5,
             "questionList": [self.test_question.pk],
@@ -527,7 +527,7 @@ class PlayerPositionViewTest(TestCase):
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
-        self.assertEqual(r.json(), self.playerInfo1, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
+        self.assertEqual(r.json(), self.playerInfo2, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
 
     def testGetInexistentPosition(self):
         r = self.client.get('/superapi/position/158959/', data={
