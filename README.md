@@ -15,8 +15,9 @@ Le projet dépend des librairies:
 - django-tokenapi (0.2.5): Librairie pour l'authentification
 - matplotlib (1.5.3): Utilisé pour résoudre le problème _point in polygon_.
 - pymysql (0.7.10): Si vous voulez utiliser MySQL, Le driver classique MySQLdb ne marche pas sur Python 3 pour le moment, c'est pourquoi cet alternative est utilisée. (Elle peut être installée comme si elle était MySQLdb) 
+- pycopg2: Si vous utilisez PostgreSQL.
 
-_(En théorie, la solution ne dépends pas d'une fonctionnalité particulière d'un SGBD, donc tant que Django supporte cette back-end, il y a à priori moyen de l'utiliser)_
+_(Des tests sont en cours pour valider l'utilisation avec MySQL et PostgreSQL.)_
 
 ## Installation
 D'abord positionnez vous dans le dossier que vous souhaitez, et cloner le projet:
