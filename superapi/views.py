@@ -307,7 +307,7 @@ class PlayerPositionView(View):
         try:
             player = Player.objects.get(pk=pid)
             return JsonResponse(data={
-                'id': player.account.id,
+                'id': player.account.pk,
                 'x': player.positionx,
                 'y': player.positiony,
                 'z': player.positionz

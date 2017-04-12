@@ -519,7 +519,7 @@ class PlayerPositionViewTest(TestCase):
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
-        self.assertEqual(r.json(), [self.playerInfo1,self.playerInfo2], "[SUPERAPI][PlayerPositionViewTest] Wrong information")
+        self.assertEqual(r.json().sort(key=lambda i: i['id']), [self.playerInfo1,self.playerInfo2].sort(key=lambda i: i['id']), "[SUPERAPI][PlayerPositionViewTest] Wrong information")
 
     def testGetOnePosition(self):
         r = self.client.get('/superapi/position/'+str(self.player.pk)+'/', data={
