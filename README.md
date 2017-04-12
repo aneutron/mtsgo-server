@@ -4,7 +4,7 @@
 
 ## Présentation
 
-Ceci est le repo du bloc serveur de l'application MTSGO. Il regroupe la documentation, les spécifications techniques et les diagrammes UML qui ont été utilisés pour ce bloc.
+Ceci est le repo du bloc serveur de l'application MTSGO. Il regroupe le code, la documentation, et les spécifications techniques.
 
 ## Dépendences
 
