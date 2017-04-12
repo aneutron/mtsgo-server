@@ -501,7 +501,7 @@ class PlayerPositionViewTest(TestCase):
         self.player.positionx = -2.569110
         self.player.positiony = 1.256957
         self.player.save()
-        self.playerInfo1 = {'id': self.player.pk, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
+        self.playerInfo1 = {'id': self.test_user1.pk, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
 
         del self.player
         self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')
@@ -509,7 +509,7 @@ class PlayerPositionViewTest(TestCase):
         self.player.positionx = -3.569110
         self.player.positiony = 2.256957
         self.player.save()
-        self.playerInfo2 = {'id': self.player.pk, 'x': -3.569110, 'y': 2.256957, 'z': 0.0}
+        self.playerInfo2 = {'id': self.test_user2.pk, 'x': -3.569110, 'y': 2.256957, 'z': 0.0}
 
         self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
         self.token = token_generator.make_token(self.test_admin)
