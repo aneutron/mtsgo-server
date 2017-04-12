@@ -370,7 +370,7 @@ class AnswerQuestionTest(TestCase):
             currentQuestion=self.test_question,
             delay=500,
             rayon=5,
-            questionList='1',
+            questionList=str(self.test_question.pk),
         )
         self.test_spot.save()
         self.test_zone = ExclusionZone(
@@ -543,8 +543,6 @@ class PlayerInfoTest(TestCase):
 class PlayerHistoryTest(TestCase):
     def setUp(self):
         self.test_user = User.objects.create_user(username='user1', email='user1@myemail.com', password='uza1pass')
-        self.player = Player(account=self.test_user, questionHistory='1')
-        self.player.save()
         self.test_question = Question(
             questionText='Would a woodchuck ... ?',
             answer1='Yes',
@@ -558,6 +556,9 @@ class PlayerHistoryTest(TestCase):
         )
         self.test_question.save()
         self.token = token_generator.make_token(self.test_user)
+        self.player = Player(account=self.test_user, questionHistory=str(self.test_question.pk))
+        self.player.save()
+
 
     def testCorrectHistory(self):
         data = {'history': [

@@ -107,7 +107,7 @@ class SpotTest(TestCase):
         self.assertEqual(r.json(), {"spots": [self.info]}, "[SUPERAPI][SpotTest] Wrong information")
 
     def testOneSpotView(self):
-        r = self.client.get('/superapi/spots/1/', data={
+        r = self.client.get('/superapi/spots/'+str(self.test_spot.pk)+'/', data={
             'user_id': self.test_admin.pk,
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
@@ -115,7 +115,7 @@ class SpotTest(TestCase):
         self.assertEqual(r.json(), self.info, "[SUPERAPI][SpotTest] Wrong information")
 
     def testInexistentSpotView(self):
-        r = self.client.get('/superapi/spots/15/', data={
+        r = self.client.get('/superapi/spots/15555/', data={
             'user_id': self.test_admin.pk,
             'token': self.token,
         }, content_type=JSON_CONTENT_TYPE)
@@ -145,8 +145,8 @@ class SpotAddTest(TestCase):
             "currentQuestion": 1,
             "delay": 0,
             "rayon": 5,
-            "questionList": [1],
-            "startTime": getTime()
+            "questionList": [self.test_question.pk],
+            "startTime": get_time()
         }
         self.token = token_generator.make_token(self.test_admin)
 
@@ -272,20 +272,20 @@ class SpotDeleteTest(TestCase):
             currentQuestion=self.test_question,
             delay=0,
             rayon=5,
-            questionList='1',
+            questionList=str(self.test_question.pk),
         )
         self.test_spot.save()
         self.token = token_generator.make_token(self.test_admin)
 
     def testDeleteSpot(self):
-        r = self.client.delete('/superapi/spots/1/', data=json.dumps({
+        r = self.client.delete('/superapi/spots/'+str(self.test_spot.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 200, "[SUPERAPI][DeleteSpotTest] Wrong status code")
         self.assertEqual(r.json(), 'Spot successfully deleted.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
 
-        r = self.client.delete('/superapi/spots/15/', data=json.dumps({
+        r = self.client.delete('/superapi/spots/156985/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token
         }), content_type=JSON_CONTENT_TYPE)
@@ -331,7 +331,7 @@ class QuestionViewTest(TestCase):
         self.assertEqual(r.json()['questions'], [self.questionInfo], "[SUPERAPI][QuestionViewTest] Wrong information")
 
     def testOneQuestion(self):
-        r = self.client.get('/superapi/questions/1/', data={
+        r = self.client.get('/superapi/questions/'+str(self.test_question.pk)+'/', data={
             'user_id': self.test_admin.pk,
             'token': self.token
         }, content_type=JSON_CONTENT_TYPE)
@@ -339,7 +339,7 @@ class QuestionViewTest(TestCase):
         self.assertEqual(r.json(), self.questionInfo, "[SUPERAPI][QuestionViewTest] Wrong information")
 
     def testInexistentQuestion(self):
-        r = self.client.get('/superapi/questions/5/', data={
+        r = self.client.get('/superapi/questions/56985/', data={
             'user_id': self.test_admin.pk,
             'token': self.token
         }, content_type=JSON_CONTENT_TYPE)
@@ -430,8 +430,9 @@ class QuestionUpdateTest(TestCase):
         )
         self.question.save()
         self.token = token_generator.make_token(self.test_admin)
+
     def testUpdateQuestion(self):
-        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+        r = self.client.post('/superapi/questions/'+str(self.question.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
             'question': self.test_question
@@ -440,7 +441,7 @@ class QuestionUpdateTest(TestCase):
         self.assertEqual(r.json(), 'Question updated successfully.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
 
     def testUpdateInexistentQuestion(self):
-        r = self.client.post('/superapi/questions/9/', data=json.dumps({
+        r = self.client.post('/superapi/questions/987965/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
             'question': self.test_question
@@ -450,7 +451,7 @@ class QuestionUpdateTest(TestCase):
 
     def testUpdateWrongQuestion(self):
         self.test_question['difficulty']='hard'
-        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+        r = self.client.post('/superapi/questions/'+str(self.question.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
             'question': self.test_question
@@ -459,7 +460,7 @@ class QuestionUpdateTest(TestCase):
         self.assertEqual(r.json(), 'Unable to parse correct numeric literals.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
 
     def testUpdateWrongEntryQuestion(self):
-        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+        r = self.client.post('/superapi/questions/'+str(self.question.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
             'ques': self.test_question
@@ -469,7 +470,7 @@ class QuestionUpdateTest(TestCase):
 
     def testUpdateWrongKeysQuestion(self):
         self.test_question.pop('topic')
-        r = self.client.post('/superapi/questions/1/', data=json.dumps({
+        r = self.client.post('/superapi/questions/'+str(self.question.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token,
             'question': self.test_question
@@ -500,14 +501,14 @@ class PlayerPositionViewTest(TestCase):
         self.player.positionx = -2.569110
         self.player.positiony = 1.256957
         self.player.save()
-        self.playerInfo1 = {'id': 1, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
+        self.playerInfo1 = {'id': self.player.pk, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
 
         self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')
         self.player = Player(account=self.test_user2)
         self.player.positionx = -3.569110
         self.player.positiony = 2.256957
         self.player.save()
-        self.playerInfo2 = {'id': 2, 'x': -3.569110, 'y': 2.256957, 'z': 0.0}
+        self.playerInfo2 = {'id': self.player.pk, 'x': -3.569110, 'y': 2.256957, 'z': 0.0}
 
         self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
         self.token = token_generator.make_token(self.test_admin)
@@ -544,7 +545,7 @@ class StatsViewTest(TestCase):
         self.player = Player(account=self.test_user1)
         self.player.positionx = -2.569110
         self.player.positiony = 1.256957
-        self.player.lastActivity = getTime()-1000
+        self.player.lastActivity = get_time() - 1000
         self.player.save()
 
         self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')

@@ -1,12 +1,19 @@
 # -*- coding: utf8 -*-
 from django.db import models
-from django.core.validators import validate_comma_separated_integer_list, MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.contrib.auth.models import User
 from django.conf import settings
-import time
+import time, re
 
-def getTime():
+
+def get_time():
     return int(time.time())
+
+
+def validate_comma_separated_values():
+    prog = re.compile(r"[-A-Za-z0-9\s]+(,[-A-Za-z0-9\s]+)*")
+    return RegexValidator(prog)
+
 
 class Player(models.Model):
     account = models.ForeignKey(User)
@@ -17,8 +24,8 @@ class Player(models.Model):
     positiony = models.FloatField(default=0.0, validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)])
     positionz = models.FloatField(default=0.0)
     score = models.IntegerField(default=0)
-    questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
-    lastActivity = models.IntegerField(default=getTime)
+    questionHistory = models.CharField(max_length=255, validators=[validate_comma_separated_values()])
+    lastActivity = models.IntegerField(default=get_time)
 
     # TODO: Test this method
     def getPosition(self):
@@ -64,8 +71,8 @@ class Spot(models.Model):
     centrez = models.IntegerField(default=0)
     rayon = models.IntegerField(validators=[MinValueValidator(0)])
     currentQuestion = models.ForeignKey('Question')
-    questionList = models.CharField(max_length=255, validators=[validate_comma_separated_integer_list])
-    startTime = models.IntegerField(default=getTime())
+    questionList = models.CharField(max_length=255, validators=[validate_comma_separated_values])
+    startTime = models.IntegerField(default=get_time())
     delay = models.IntegerField()
 
     # TODO: Test this method too.

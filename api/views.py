@@ -195,9 +195,10 @@ class Questions(View):
         # (No try try/except block as validation would be enforced at creation by django)
         spotQuestions = [int(i) for i in spot.questionList.split(',')]
         questionId = random.choice(spotQuestions)
-        question = Question.objects.get(pk=questionId)
+        try:
+            question = Question.objects.get(pk=questionId)
         # In case the question reference is wrong.
-        if not question:
+        except Exception:
             logger.error("[INTERNAL ERR] Bad question reference on spot " + str(spotid) + ": " + str(questionId))
             return JsonResponse(_("An error internal error occurred during the operation."), status=500, safe=False)
         spot.currentQuestion = question
