@@ -503,6 +503,7 @@ class PlayerPositionViewTest(TestCase):
         self.player.save()
         self.playerInfo1 = {'id': self.player.pk, 'x': -2.569110, 'y': 1.256957, 'z': 0.0}
 
+        del self.player
         self.test_user2 = User.objects.create_user(username='user2', email='user2@myemail.com', password='uza2pass')
         self.player = Player(account=self.test_user2)
         self.player.positionx = -3.569110
