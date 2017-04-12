@@ -91,6 +91,9 @@ DATABASES = {
         'NAME': 'mtsgo_test',
         'USER': 'travis',
         'PASSWORD': '',
+        'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
