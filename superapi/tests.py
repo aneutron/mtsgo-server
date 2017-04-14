@@ -82,6 +82,7 @@ class SpotTest(TestCase):
                 'answer4': self.test_question.answer4,
                 'score': self.test_question.score,
                 'difficulty': self.test_question.difficulty,
+                'rightAnswer': self.test_question.rightAnswer,
                 'topic': self.test_question.topic
             },
             "questions": [{
@@ -93,6 +94,7 @@ class SpotTest(TestCase):
                 'answer4': self.test_question.answer4,
                 'score': self.test_question.score,
                 'difficulty': self.test_question.difficulty,
+                'rightAnswer': self.test_question.rightAnswer,
                 'topic': self.test_question.topic
             }]
         }
@@ -278,14 +280,14 @@ class SpotDeleteTest(TestCase):
         self.token = token_generator.make_token(self.test_admin)
 
     def testDeleteSpot(self):
-        r = self.client.delete('/superapi/spots/'+str(self.test_spot.pk)+'/', data=json.dumps({
+        r = self.client.post('/superapi/spots/delete/'+str(self.test_spot.pk)+'/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 200, "[SUPERAPI][DeleteSpotTest] Wrong status code")
         self.assertEqual(r.json(), 'Spot successfully deleted.', "[SUPERAPI][DeleteSpotTest] Wrong reason")
 
-        r = self.client.delete('/superapi/spots/156985/', data=json.dumps({
+        r = self.client.post('/superapi/spots/delete/156985/', data=json.dumps({
             'user_id': self.test_admin.pk,
             'token': self.token
         }), content_type=JSON_CONTENT_TYPE)
@@ -318,6 +320,7 @@ class QuestionViewTest(TestCase):
                 'answer4': self.test_question.answer4,
                 'score': self.test_question.score,
                 'difficulty': self.test_question.difficulty,
+                'rightAnswer': self.test_question.rightAnswer,
                 'topic': self.test_question.topic
             }
         self.token = token_generator.make_token(self.test_admin)
@@ -477,6 +480,51 @@ class QuestionUpdateTest(TestCase):
         }), content_type=JSON_CONTENT_TYPE)
         self.assertEqual(r.status_code, 401, "[SUPERAPI][QuestionUpdateTest] Wrong status code")
         self.assertEqual(r.json(), 'Invalid JSON input.', "[SUPERAPI][QuestionUpdateTest] Wrong reason")
+
+
+class QuestionDeleteTest(TestCase):
+    def setUp(self):
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.test_question = Question(
+            questionText='Would a woodchuck ... ?',
+            answer1='Yes',
+            answer2='No',
+            answer3='I said Yes',
+            answer4="YOU'RE WRONG",
+            difficulty=100,
+            score=100,
+            topic='Memetics',
+            rightAnswer=1
+        )
+        self.test_question.save()
+        self.questionInfo = {
+                'id': self.test_question.id,
+                'question': self.test_question.questionText,
+                'answer1': self.test_question.answer1,
+                'answer2': self.test_question.answer2,
+                'answer3': self.test_question.answer3,
+                'answer4': self.test_question.answer4,
+                'score': self.test_question.score,
+                'difficulty': self.test_question.difficulty,
+                'rightAnswer': self.test_question.rightAnswer,
+                'topic': self.test_question.topic
+            }
+        self.token = token_generator.make_token(self.test_admin)
+
+    def testDeleteQuestion(self):
+        r = self.client.post('/superapi/questions/delete/'+str(self.test_question.pk)+'/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 200, "[SUPERAPI][DeleteQuestionTest] Wrong status code")
+        self.assertEqual(r.json(), 'Question successfully deleted.', "[SUPERAPI][DeleteQuestionTest] Wrong reason")
+
+        r = self.client.post('/superapi/questions/delete/156985/', data=json.dumps({
+            'user_id': self.test_admin.pk,
+            'token': self.token
+        }), content_type=JSON_CONTENT_TYPE)
+        self.assertEqual(r.status_code, 404, "[SUPERAPI][DeleteQuestionTest] Wrong status code")
+        self.assertEqual(r.json(), 'Question with ID=' + '156985' + ' not found.', "[SUPERAPI][DeleteQuestionsTest] Wrong reason")
 
 
 class ServerStateViewTest(TestCase):

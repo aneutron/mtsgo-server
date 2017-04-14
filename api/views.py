@@ -85,7 +85,7 @@ class UpdatePosition(View):
         player.positionx = x
         player.positiony = y
         player.positionz = z
-        player.lastActivity = time.time()
+        player.lastActivity = get_time()
         try:
             player.save()
         except Exception as e2:

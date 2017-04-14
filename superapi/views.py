@@ -34,14 +34,6 @@ class SpotsView(View):
         else:
             return self._insert_spot(request)
 
-    def delete(self, request, spot_id):
-        try:
-            spot = Spot.objects.get(pk=spot_id)
-            spot.delete()
-            return JsonResponse(_('Spot successfully deleted.'), status=200, safe=False)
-        except Spot.DoesNotExist:
-            return JsonResponse(_('Spot with ID=' + str(spot_id) + ' not found.'), status=404, safe=False)
-
     def _get_spot_by_id(self, spot_id):
         spot = Spot.objects.get(pk=spot_id)
         spot.loadQuestions()
@@ -62,6 +54,7 @@ class SpotsView(View):
                 'answer4': spot.currentQuestion.answer4,
                 'score': spot.currentQuestion.score,
                 'difficulty': spot.currentQuestion.difficulty,
+                'rightAnswer': spot.currentQuestion.rightAnswer,
                 'topic': spot.currentQuestion.topic
             },
             "questions": []
@@ -76,6 +69,7 @@ class SpotsView(View):
                 'answer4': quest.answer4,
                 'score': quest.score,
                 'difficulty': quest.difficulty,
+                'rightAnswer': quest.rightAnswer,
                 'topic': quest.topic
             })
         return data
@@ -165,6 +159,15 @@ class SpotsView(View):
         )
 
 
+class SpotDeleteView(View):
+    def post(self, request, spot_id):
+        try:
+            spot = Spot.objects.get(pk=spot_id)
+            spot.delete()
+            return JsonResponse(_('Spot successfully deleted.'), status=200, safe=False)
+        except Spot.DoesNotExist:
+            return JsonResponse(_('Spot with ID=' + str(spot_id) + ' not found.'), status=404, safe=False)
+
 # FIXME: Add a Question.packAsDict() method.
 class QuestionsView(View):
     def get(self, request, qid=None):
@@ -180,6 +183,7 @@ class QuestionsView(View):
                     'answer4': quest.answer4,
                     'score': quest.score,
                     'difficulty': quest.difficulty,
+                    'rightAnswer': quest.rightAnswer,
                     'topic': quest.topic
                 }
                 return JsonResponse(data, status=200)
@@ -197,6 +201,7 @@ class QuestionsView(View):
                     'answer4': quest.answer4,
                     'score': quest.score,
                     'difficulty': quest.difficulty,
+                    'rightAnswer': quest.rightAnswer,
                     'topic': quest.topic
                 })
             return JsonResponse(data, status=200)
@@ -272,6 +277,16 @@ class QuestionsView(View):
             return JsonResponse(_('Question parameters are not correctly set: ' + e.message()), status=401, safe=False)
         except Exception:
             return JsonResponse(_('Unable to update the question.'), status=500, safe=False)
+
+
+class QuestionDeleteView(View):
+    def post(self, request, qid):
+        try:
+            question = Question.objects.get(pk=qid)
+            question.delete()
+            return JsonResponse(_('Question successfully deleted.'), status=200, safe=False)
+        except Question.DoesNotExist:
+            return JsonResponse(_('Question with ID=' + str(qid) + ' not found.'), status=404, safe=False)
 
 
 class CarteView(View):

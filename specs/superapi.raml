@@ -42,6 +42,12 @@ types:
       difficulty:
         type: integer
         description: Difficulté de la question.
+      rightAnswer:
+        type: integer
+        description: Numero de la bonne réponse.
+       topic:
+        type: string
+        description: Thème de la question
   QuestionList:
     type: object
     properties:
@@ -236,22 +242,24 @@ types:
           description: Spot non retrouvé.
         403:
           description: Authentification impossible.
-    delete:
-      description: Supprime le spot concerné.
-      queryParameters:
-        token:
-          type: string
-          description: Jeton d'authentification.
-        user_id:
-          type: integer
-          description: ID de l'administrateur.
-      responses:
-        200:
-          description: La suppression a été un succès.
-        404:
-          description: Impossible de trouver le spot avec cet ID.
-        403:
-          description: Authentification impossible.
+  /delete:
+    /{qid}/:
+      post:
+        description: Supprime le spot concerné.
+        queryParameters:
+          token:
+            type: string
+            description: Jeton d'authentification.
+          user_id:
+            type: integer
+            description: ID de l'administrateur.
+        responses:
+          200:
+            description: La suppression a été un succès.
+          404:
+            description: Impossible de trouver le spot avec cet ID
+          403:
+            description: Authentification impossible.
 
 /questions:
   description: Obtention, insértion et modification des questions dans le jeu.
@@ -333,6 +341,24 @@ types:
               description: Message d'erreur.
         403:
           description: Authentification impossible
+  /delete:
+    /{qid}/:
+      post:
+        description: Supprime le spot concerné.
+        queryParameters:
+          token:
+            type: string
+            description: Jeton d'authentification.
+          user_id:
+            type: integer
+            description: ID de l'administrateur.
+        responses:
+          200:
+            description: La suppression a été un succès.
+          404:
+            description: Impossible de trouver le spot avec cet ID
+          403:
+            description: Authentification impossible.
 
 /carte:
   description: Obtention de la dernière version de la carte.
