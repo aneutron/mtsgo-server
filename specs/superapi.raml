@@ -45,7 +45,7 @@ types:
       rightAnswer:
         type: integer
         description: Numero de la bonne réponse.
-       topic:
+      topic:
         type: string
         description: Thème de la question
   QuestionList:
@@ -243,7 +243,7 @@ types:
         403:
           description: Authentification impossible.
   /delete:
-    /{qid}/:
+    /{question_id}/:
       post:
         description: Supprime le spot concerné.
         queryParameters:
