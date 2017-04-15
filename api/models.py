@@ -90,3 +90,8 @@ class Spot(models.Model):
 class ExclusionZone(models.Model):
     name = models.CharField(max_length=20)
     points = models.TextField()
+
+
+class Map(models.Model):
+    version = models.FloatField(max_length=20)
+    file = models.FileField()

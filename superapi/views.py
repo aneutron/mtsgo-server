@@ -7,6 +7,7 @@ from mtsgo.tokenapi.views import token_new
 from api.models import *
 from math import isfinite
 import psutil, json
+from .forms import UploadFileForm
 
 
 class AuthView(View):
@@ -290,8 +291,21 @@ class QuestionDeleteView(View):
 
 
 class CarteView(View):
-    pass
+    def get(self, request):     # Il faut renvoyer aussi le fichier.
+        carte = Map.objects.all()
+        if len(carte) == 0:
+            return JsonResponse('No map uploaded', status=404, safe=False)
+        else:
+            return JsonResponse('The version of the map is '+str(carte[0].version), status=200, safe=False)
 
+    def post(self, request):
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            map = Map(file=request.FILES['file'], version=1.0)
+            map.save()
+            return JsonResponse(_('Map successfully uploaded.'), status=200, safe=False)
+        else:
+            return JsonResponse(_('Unable to upload the map'), status=400, safe=False)
 
 class ServerStateView(View):
     def get(self, request):

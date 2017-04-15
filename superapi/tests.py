@@ -627,3 +627,21 @@ class StatsViewTest(TestCase):
         self.assertEqual(r.status_code, 200, "[SUPERAPI][PlayerPositionViewTest] Wrong status code")
         self.assertEqual(r.json(), self.stats, "[SUPERAPI][PlayerPositionViewTest] Wrong information")
 
+
+class UploadMapTest(TestCase):
+    def setUp(self):
+        self.test_admin = User.objects.create_user(username='admin1', email='admin1@myemail.com', password='ada1pass', is_staff=True)
+        self.token = token_generator.make_token(self.test_admin)
+
+    def testUploadFile(self):
+        with open('requirements.txt') as file:
+            r = self.client.post('/superapi/carte/', data={
+                'user_id': self.test_admin.pk,
+                'token': self.token,
+                'file': file,
+                'Title': 'filetest'
+            })
+            self.assertEqual(r.status_code, 200, "[SUPERAPI][UploadMapTest] Wrong status code")
+            print(r.json())
+        r = self.client.get('/superapi/carte/')
+        print(r.json())
