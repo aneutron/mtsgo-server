@@ -20,20 +20,11 @@ La réalisation du projet se fait en Python avec le framework Django, les donné
 
 ### Première version: v0.1a
 
-L'objectif est d'assurer un fonctionnement minimal du jeu. l'API couvrira:
+L'objectif est d'assurer un fonctionnement minimal du jeu. 
 
-_Les fonctionnalités précédées par un __[S]__ concernent la supervision du serveur_
-- __[S]__ L'ajout et la modification de questions dans le monde.
-- Retourner les questions environnantes pour les joueurs.
-- Confirmer ou pas la réponse d'un joueur à une question et créditer son score.
-- Fournir la carte du monde.
-- __[S]__ Fournir des statistiques sur le serveur et le monde.
 
-## Installation
 
-_À terme, le projet devra fournir un script pour l'installation d'une instance du projet_
 
-(à venir)
 
 ## Auteurs
 
