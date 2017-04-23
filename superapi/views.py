@@ -352,3 +352,19 @@ class StatsView(View):
             'nbrJConnected': Player.objects.filter(lastActivity__gte=time.time()-consideredActive).count()
         }
         return JsonResponse(data, status=200)
+
+class ExclusionZoneView(View):
+    def get(self, req):
+        data = {'ExclusionZone' : []}
+        for zone in ExclusionZone.objects.all():
+            data['ExclusionZone'].append(zone)
+        return JsonResponse(data, status=200)
+
+class ExclusionZoneView(View):
+    def post(self, request, zone_id):
+        try:
+            zone = ExclusionZone.objects.get(pk=spot_id)
+            zone.delete()
+            return JsonResponse(_('Exclusion zone successfully deleted.'), status=200, safe=False)
+        except ExclusionZone.DoesNotExist:
+            return JsonResponse(_('Exclusion zone with ID=' + str(spot_id) + ' not found.'), status=404, safe=False)
