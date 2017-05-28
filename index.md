@@ -10,20 +10,19 @@ Le système devra notamment fonctionner avec une API REST-ish fournie par le ser
 
 Ceci est le repo du bloc __backend__ de l'application serveur MTSGO. Il regroupe la documentation, les spécifications techniques avec le code du projet. Le code source est sous la licence libre.
 
-## Réalisation technique
+La spécification de l'API est faite avec le langage RAML 1.0 ([API Supervision](./api_super), Lien vers l'API client, [API Utilisateurs](./api))
 
-La spécification se fait avec le langage RAML 1.0 ([Lien](./api) vers l'API Supervision, Lien vers l'API client.)
+La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur un backend du choix de l'utilisateur parmis SQLite, MySQL ou PostgreSQL.
 
-La réalisation du projet se fait en Python avec le framework Django, les données seront stockées sur MySQL.
+Une suite de tests a été écrite pour tester la conformité de la solution à la spécification de l'API, tests qui sont éxecutés automatiquement à chaque modification, et pour les trois logiciels de SGBD mentionnés précédemment.
 
 ## Fonctionnalités
 
 ### Première version: v0.1a
 
 L'objectif est d'assurer un fonctionnement minimal du jeu. 
-
-
-
+- Modèles de questions, instances de questions, zones d'exclusion, et gestion des joueurs.
+- Réponse aux questions, geolocking.
 
 
 ## Auteurs
