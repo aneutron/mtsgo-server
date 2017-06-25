@@ -354,17 +354,138 @@ class StatsView(View):
         return JsonResponse(data, status=200)
 
 class ExclusionZoneView(View):
-    def get(self, req):
-        data = {'ExclusionZone' : []}
-        for zone in ExclusionZone.objects.all():
-            data['ExclusionZone'].append(zone)
-        return JsonResponse(data, status=200)
 
-class ExclusionZoneView(View):
+    def get(self, req, zone_id=None):
+        if zone_id:
+            try:
+                data = self._get_zone_by_id(zone_id)
+                return JsonResponse(data, status=200)
+            except ExclusionZone.DoesNotExist:
+                return JsonResponse(_('Zone not found'), status=404, safe=False)
+
+        else:
+            return self._get_all_zones()
+
+    def post(self, request, zone_id=None):
+        if zone_id:
+            return self._update_zone(request, zone_id)
+        else:
+            return self._insert_zone(request)
+    
+    def _get_zone_by_id(self, zone_id):
+        zone = ExclusionZone.objects.get(pk=zone_id)
+        data = {
+                'name': zone.name,
+                'points': zone.points
+                }
+
+        return data
+    
+    def _get_all_zones(self):
+        zones_id = [z.pk for z in ExclusionZone.objects.all()]
+        zones = []
+        for zone_id in zones_id:
+            zones.append(self._get_zone_by_id(zone_id))
+        data = {"zones": zones}
+        
+        print(data)
+        
+        return JsonResponse(data, status=200)
+    
+    def _insert_zone(self, request):
+        if 'zone' not in request.json_data:
+            return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+        data = request.json_data['zone']
+        validated_zone = self._validate_zone_data(data)
+        if type(validated_zone) is not type(ExclusionZone()):
+            return validated_zone
+        try:
+            validated_zone.save()
+            return JsonResponse(_('Exclusion zone inserted successfully.'), status=200, safe=False)
+        except Exception:
+            # FIXME: Shouldn't happen, but handle correctly.
+            pass
+
+    def _update_zone(self, request, spot_id):
+        return JsonResponse(_('Not yet implemented.'), status=500, safe=False)
+    
+    
+    def _validate_zone_data(self, data):
+        """
+        Validates a spot's data and returns an error message in case it was impossible.
+        :param data: Dict of data that the spot should be populated with.
+        :return: In case of no error encountered, return an instance of Spot populated with appropriate data. Otherwise,
+        returns a JsonResponse with an error message.
+        """
+        needed_keys = ['name', 'points']
+
+        if type(data) is not type({}):
+            return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+            
+        # If the first one fails first, the second is not verified, hence it's more economic this way.
+        for k in needed_keys:
+            if k not in data.keys():
+                return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+        
+        if type(data['points']) is not type([]):
+            return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+
+        for points in data['points']:
+            if type(points) is not type([]):
+                return JsonResponse(_('Malformed JSON input.'), status=401, safe=False)
+            if (2 < len(data['points']) < 3):
+                return JsonResponse(_('A zone is composed of at least 3 points'), status=401, safe=False)
+
+        # Try parsing all numeric literals.
+        try:
+            for point in data['points']:
+                x, y = float(point[0]), float(point[1])
+                
+                #checks if there is a 3rd dimension
+                if len(point) == 3:
+                    z = float(point[2])
+            
+        except ValueError:
+            return JsonResponse(_('Unable to parse correct numeric literals.'), status=401, safe=False)
+        
+        #The points forming the polygon will be stored in a String
+        points_string = '['
+        
+        for point in data['points']:
+            x, y = float(point[0]), float(point[1])
+            
+            if len(point) == 3:
+                z = float(point[2])
+                if (not isinfinite(z)):
+                    return JsonResponse(_('zone coordinates can\'t be infinity or NaN.'), status=401, safe=False)                
+            else:
+                z = 0.0
+        
+            if (not isfinite(x)) or (not isfinite(y)):
+                return JsonResponse(_('zone coordinates can\'t be infinity or NaN.'), status=401, safe=False)
+            
+            if (not -180 <= y <= 180) or (not -90 <= x <= 90):
+                return JsonResponse(_('Latitude and Longitude are out of range.'), status=401, safe=False)
+                
+            points_string += str('[' + str(x) + ',' + str(y) + ',' + str(z) + '],')
+        
+        #removing the last ',' and adding a ']'
+        points_string = points_string[:-1]
+        points_string += ']'
+      
+        # If all is well, return an ExclusionZone instance.
+        return ExclusionZone(
+            name = data['name'],
+            points = points_string
+        )
+        
+class ExclusionZoneDeleteView(View):
     def post(self, request, zone_id):
         try:
-            zone = ExclusionZone.objects.get(pk=spot_id)
+            zone = ExclusionZone.objects.get(pk=zone_id)
             zone.delete()
             return JsonResponse(_('Exclusion zone successfully deleted.'), status=200, safe=False)
         except ExclusionZone.DoesNotExist:
-            return JsonResponse(_('Exclusion zone with ID=' + str(spot_id) + ' not found.'), status=404, safe=False)
+            return JsonResponse(_('Exclusion zone with ID=' + str(zone_id) + ' not found.'), status=404, safe=False)
+
+

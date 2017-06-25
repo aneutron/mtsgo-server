@@ -17,5 +17,8 @@ urlpatterns = [
     url(r'^position/$', try_decode_json(token_required(views.PlayerPositionView.as_view(), True)), name='admin_position'),
     url(r'^position/(?P<pid>[0-9]+)/$', try_decode_json(token_required(views.PlayerPositionView.as_view(), True)),name='admin_position_by_id'),
     url(r'^state/', try_decode_json(token_required(views.ServerStateView.as_view(), True)), name='admin_server_state'),
-    url(r'^stats/', try_decode_json(token_required(views.StatsView.as_view())), name='admin_server_stats')
+    url(r'^stats/', try_decode_json(token_required(views.StatsView.as_view())), name='admin_server_stats'),
+    url(r'^zones/$',try_decode_json(token_required(views.ExclusionZoneView.as_view(), True)), name='admin_exclusion_zone_global'),
+    url(r'^zones/(?P<zone_id>[0-9]+)/$',try_decode_json(token_required(views.ExclusionZoneView.as_view(), True)), name='admin_exclusion_zone_by_id'),
+    url(r'^zones/delete/(?P<zone_id>[0-9]+)/$',try_decode_json(token_required(views.ExclusionZoneDeleteView.as_view(), True)), name='admin_delete_zone'),
 ]

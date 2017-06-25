@@ -34,9 +34,11 @@ class AuthNewView(View):
         """
         # Vérifier que les données nécessaires aux requêtes sont là.
         req_data = request.json_data
+        print(req_data)
         if 'creds' not in req_data:
             return JsonResponse(_('Malformed JSON input'), status=401, safe=False)
         req_data = req_data['creds']
+
         if ('email' not in req_data) or ('username' not in req_data) or ('password' not in req_data):
             return JsonResponse(_('Missing parameters for registration'), status=401, safe=False)
         # Vérifier que le non d'utilisateur n'existe pas.

@@ -89,4 +89,4 @@ class Spot(models.Model):
 
 class ExclusionZone(models.Model):
     name = models.CharField(max_length=20)
-    points = models.TextField()
+    points = models.CharField(max_length=255, validators=[validate_comma_separated_values])
