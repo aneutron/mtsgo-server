@@ -390,8 +390,6 @@ class ExclusionZoneView(View):
             zones.append(self._get_zone_by_id(zone_id))
         data = {"zones": zones}
         
-        print(data)
-        
         return JsonResponse(data, status=200)
     
     def _insert_zone(self, request):
