@@ -376,6 +376,7 @@ class ExclusionZoneView(View):
     def _get_zone_by_id(self, zone_id):
         zone = ExclusionZone.objects.get(pk=zone_id)
         data = {
+                'id': zone.pk,
                 'name': zone.name,
                 'points': zone.points
                 }
