@@ -1,13 +1,17 @@
 from django.contrib import admin
+import datetime
 from .models import *
 # -*- coding: utf8 -*-
 
 @admin.register(Spot)
 class SpotAdmin(admin.ModelAdmin):
-    list_display = ('centrex', 'centrey', 'centrez', 'current_question', 'startTime')
+    list_display = ('current_question', 'centrex', 'centrey', 'centrez', 'start_time')
 
     def current_question(self, obj):
         return obj.currentQuestion.questionText
+
+    def start_time(self, obj):
+        return datetime.datetime.utcfromtimestamp(obj.startTime)
 
     current_question.short_description = 'Question active'
 
