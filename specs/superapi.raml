@@ -263,38 +263,39 @@ types:
 
 /questions:
   description: Obtention, insértion et modification des questions dans le jeu.
-  get:
-    description: Retourne toutes les questions dans la base de données.
-    queryParameters:
-      token:
-        description: Le jeton d'authentification.
-        type: string
-      user_id:
-        type: integer
-        description: ID de l'administrateur.
-    responses:
-      200:
-        body:
-          application/json:
-            type: Question[]
-  post:
-    description: Positionne une question sur le jeu. __L'ID doit être vide pour cette requête__
-    queryParameters:
-      token:
-        description: Le jeton d'authentification.
-        type: string
-      question:
-        type: Question
-        description: La question à insérer.
-    responses:
-      200:
-        description: Code retourné si aucune erreur n'a survenue lors de l'ajout de la question.
-      403:
-        description: Authentification impossible.
-      401:
-        description: Code retourné si la question soumise contient des erreurs.
-        body:
-          description: Erreur rencontrée
+  /:    
+      get:
+        description: Retourne toutes les questions dans la base de données.
+        queryParameters:
+          token:
+            description: Le jeton d'authentification.
+            type: string
+          user_id:
+            type: integer
+            description: ID de l'administrateur.
+        responses:
+          200:
+            body:
+              application/json:
+                type: Question[]
+      post:
+        description: Positionne une question sur le jeu. __L'ID doit être vide pour cette requête__
+        queryParameters:
+          token:
+            description: Le jeton d'authentification.
+            type: string
+          question:
+            type: Question
+            description: La question à insérer.
+        responses:
+          200:
+            description: Code retourné si aucune erreur n'a survenue lors de l'ajout de la question.
+          403:
+            description: Authentification impossible.
+          401:
+            description: Code retourné si la question soumise contient des erreurs.
+            body:
+              description: Erreur rencontrée
   /{question_id}/:
     get:
       description: Retourne les détails d'une question si son ID existe
@@ -360,7 +361,7 @@ types:
           403:
             description: Authentification impossible.
 
-/carte:
+/carte/:
   description: Obtention de la dernière version de la carte.
   get:
     description: Lien vers le fichier de la carte.
@@ -454,3 +455,83 @@ types:
           description: Authentification impossible
         404:
           description: Si le joueur avec l'id __id_joueur__ n'a pas été trouvé.
+
+/zones:
+  description: Gestion des zones d'exclusion du jeu
+  /:    
+      get:
+        description: Liste toutes les zones d'exclusion du jeu
+        queryParameters:
+          token:
+            type: string
+            description: Jeton d'authentification.
+          user_id:
+            type: integer
+            description: ID de l'administrateur.
+        responses:
+          200:
+            body:
+             aplication/json:
+               type: EcxlusionZone[]
+          403:
+              description: Authentification impossible
+      post:
+        description: Ajoute une zone d'exclusion dans le jeu
+        queryParameters:
+          token:
+                type: string
+                description: Jeton d'authentification.
+              user_id:
+                type: integer
+                description: ID de l'administrateur.
+          name:
+            description: Nom de la zone d'exclusion
+            type: String
+          points:
+            description: liste des sommets
+            type: [[x,y]] ou [[x,y,z]]
+        responses:
+          200:
+              description: Dans le cas où l'ajout de zone a fonctionné
+          401:
+              description: La zone contient des erreurs
+          403:
+              description: Authentification impossible.
+        
+  /delete/{id_zone}/:
+     post:
+        description: Supprime la zone d'exclusion concernée.
+        queryParameters:
+          token:
+            type: string
+            description: Jeton d'authentification.
+          user_id:
+            type: integer
+            description: ID de l'administrateur.
+        responses:
+          200:
+            description: La suppression a été un succès.
+          404:
+            description: Impossible de trouver la zone avec cet ID
+          403:
+            description: Authentification impossible.
+  
+  /{id_zone}/:
+    get:
+      description: Retourne les détails de la zone d'exclusion spécifiée
+      queryParameters:
+        token:
+            type: string
+            description: Jeton d'authentification.
+        user_id:
+            type: integer
+            description: ID de l'administrateur.
+      responses:
+        200:
+          body:
+           aplication/json:
+             type: EcxlusionZone      
+        403:
+          description: Authentification impossible
+        404:
+          description: Si la zone avec l'id __id_zone__ n'a pas été trouvée.
