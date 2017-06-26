@@ -67,7 +67,7 @@ class SpotTest(TestCase):
         self.test_spot.save()
         self.token = token_generator.make_token(self.test_admin)
         self.info = {
-            "id": self.test_spot.pk,
+            "id": int(self.test_spot.pk),
             "centrex": self.test_spot.centrex,
             "centrey": self.test_spot.centrey,
             "centrez": self.test_spot.centrez,

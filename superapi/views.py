@@ -39,7 +39,7 @@ class SpotsView(View):
         spot.loadQuestions()
         # TODO: Add a spot.packWithQuestions() method.
         data = {
-            "id": spot_id,
+            "id": int(spot_id),
             "centrex": spot.centrex,
             "centrey": spot.centrey,
             "centrez": spot.centrez,
