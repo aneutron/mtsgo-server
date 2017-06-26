@@ -34,7 +34,6 @@ class AuthNewView(View):
         """
         # Vérifier que les données nécessaires aux requêtes sont là.
         req_data = request.json_data
-        print(req_data)
         if 'creds' not in req_data:
             return JsonResponse(_('Malformed JSON input'), status=401, safe=False)
         req_data = req_data['creds']
