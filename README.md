@@ -16,10 +16,13 @@ Le projet dépend des librairies:
 - Django (1.10): Framework de base pour le projet
 - django-tokenapi (0.2.5): Librairie pour l'authentification
 - matplotlib (1.5.3): Utilisé pour résoudre le problème _point in polygon_.
-- pymysql (0.7.10): Si vous voulez utiliser MySQL, Le driver classique MySQLdb ne marche pas sur Python 3 pour le moment, c'est pourquoi cet alternative est utilisée. (Elle peut être installée comme si elle était MySQLdb) 
+- pymysql (0.7.10): Si vous voulez utiliser MySQL, Le driver classique MySQLdb ne marche pas sur Python 3 pour le moment, c'est pourquoi cet alternative est utilisée. (Elle peut être installée comme si elle était MySQLdb avec du monkey patching) 
 - pycopg2: Si vous utilisez PostgreSQL.
 
 ## Installation
+
+### Pour votre environnement de développement :
+
 D'abord positionnez vous dans le dossier que vous souhaitez, et cloner le projet:
 
 `git clone https://github.com/aneutron/mtsgo-server`
@@ -34,8 +37,21 @@ Pour lancer votre serveur de test, éxecutez:
 
 `python manage.py runserver`
 
-Vous pouvez bien évidemment l'installer comme application uWSGI derrière Apache ou Nginx. Un autre guide viendra après.
+> Astuce: Utilisez [Postman](https://www.getpostman.com/apps) pour accélerer votre développement et vos tests.
 
+### Pour du déploiement :
+
+Il est recommandé d'utiliser [l'image Docker](./Dockerfile) pour setup rapidement une instance pré-configuré. Après avoir installé Docker, il suffit d'éxecuter la commande suivante dans le dossier du repo cloné:
+
+`docker build -f ./Dockerfile -t mtsgo:latest ./`
+
+Et puis:
+
+`docker run -d -p 8080:80 -n mtsgo-server mtsgo:latest`
+
+Vous pouvez alors accéder à votre serveur sur localhost:8080.
+
+> Si votre setup requiert une persistence, monter la base de donnée en volume Docker, ou utiliser une base de donnée MySQL/PgSQL est recommandé.
 
 ## Code coverage & Tests
 
