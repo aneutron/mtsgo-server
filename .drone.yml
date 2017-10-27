@@ -1,9 +1,14 @@
 pipeline:
+  cache:
+    mout:
+      - wheeldir
   build:
     image: python:3.6
     commands:
       - export DJANGO_SETTING_MODULE=mtsgo.settings
-      - pip install -r requirements.txt --quiet
+      - pip install --upgrade pip setuptools wheel
+      - pip wheel -r requirements.txt --wheel-dir=wheeldir --find-links=wheeldir
+      - pip install --use-wheel --no-index --find-links=wheeldir -r requirements.txt --quiet
       - python manage.py makemigrations
       - python manage.py migrate
       - python manage.py check
