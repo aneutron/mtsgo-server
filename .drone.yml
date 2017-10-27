@@ -2,7 +2,7 @@ pipeline:
   build:
     image: python:3.6
     commands:
-      - exort DJANGO_SETTING_MODULE=mtsgo.settings
+      - export DJANGO_SETTING_MODULE=mtsgo.settings
       - pip install -r requirements.txt --quiet
       - python manage.py makemigrations
       - python manage.py migrate
