@@ -2,7 +2,7 @@ appdirs==1.4.3
 cycler==0.10.0
 Django==1.10
 django-tokenapi==0.2.5
-matplotlib==1.5.1
+matplotlib
 numpy
 olefile==0.44
 packaging==16.8
